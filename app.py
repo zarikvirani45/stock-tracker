@@ -1,8 +1,8 @@
-# app.py
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import yfinance as yf
 from datetime import datetime, timedelta
+import os  # <-- Import os for env vars
 
 app = Flask(__name__)
 CORS(app)
@@ -94,4 +94,5 @@ def trending():
         return jsonify([])
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5050)
+    port = int(os.environ.get("PORT", 5051))  # Dynamically get port or default to 5051
+    app.run(debug=True, host='0.0.0.0', port=port)
