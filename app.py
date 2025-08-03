@@ -142,7 +142,7 @@ def stock_data():
             "prices": prices,
             "absolute_change": absolute_change,
             "percent_change": percent_change,
-            "positive": percent_change >= 0
+            "positive": bool(percent_change >= 0)
         }
 
         return jsonify(stock_summary)
