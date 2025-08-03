@@ -2,88 +2,240 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Stock Tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    /* Reset & base */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       background-color: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 10px 40px;
+      color: #222;
     }
 
     header {
       background-color: #222;
       color: white;
-      padding: 20px;
+      padding: 20px 10px;
+      width: 100%;
+      max-width: 900px;
       display: flex;
-      justify-content: space-between;
+      flex-wrap: wrap;
+      justify-content: center;
       align-items: center;
+      gap: 10px;
+      box-sizing: border-box;
+      border-radius: 0 0 10px 10px;
+      user-select: none;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+      flex: 1 1 100%;
     }
 
     #searchBox {
       padding: 10px;
-      font-size: 16px;
-      width: 300px;
+      font-size: 1rem;
+      min-width: 180px;
+      max-width: 300px;
+      flex-grow: 1;
+      border-radius: 4px;
+      border: none;
+      outline: none;
     }
 
     #searchBtn {
       padding: 10px 20px;
-      font-size: 16px;
-      margin-left: 10px;
+      font-size: 1rem;
+      border: none;
+      background-color: #5a9;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+      flex-shrink: 0;
+      transition: background-color 0.3s;
     }
 
+    #searchBtn:hover {
+      background-color: #48a868;
+    }
+
+    /* Container */
     .container {
-      max-width: 100%;
-      padding: 20px;
-    }
-
-    #chart-container {
+      max-width: 900px;
       width: 100%;
-      height: 600px;
-      margin-bottom: 40px;
-    }
-
-    .priceInfo {
-      font-size: 18px;
-      margin-bottom: 20px;
-    }
-
-    .positive {
-      color: green;
-    }
-
-    .negative {
-      color: red;
-    }
-
-    .range-buttons button {
-      margin: 2px;
-      padding: 8px 12px;
-    }
-
-    #newsSection {
-      margin-top: 40px;
-    }
-
-    .news-item {
       background: white;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px;
+      margin-top: 20px;
+      padding: 20px;
+      box-sizing: border-box;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      text-align: center;
     }
 
+    /* Continuous ticker */
     .tickerBar {
-      background-color: #eee;
-      padding: 10px;
-      overflow-x: auto;
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      height: 40px;
+      margin: 20px auto 30px;
+      overflow: hidden;
+      background-color: #222;
+      border-radius: 8px;
+      color: #eee;
+      font-weight: bold;
+      font-size: 1.1rem;
+      user-select: none;
+      box-sizing: border-box;
+      border: 2px solid #444;
+    }
+
+    .tickerContent {
+      display: inline-block;
       white-space: nowrap;
+      will-change: transform;
+      animation: tickerMove 20s linear infinite;
+      padding-left: 100%;
     }
 
     .tickerItem {
       display: inline-block;
-      margin-right: 20px;
+      margin: 0 2rem;
+    }
+
+    @keyframes tickerMove {
+      0% {
+        transform: translateX(0);
+      }
+
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+
+    /* Price info */
+    .priceInfo {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      min-height: 4em;
+    }
+
+    .positive {
+      color: green;
+      font-weight: bold;
+    }
+
+    .negative {
+      color: red;
+      font-weight: bold;
+    }
+
+    /* Range buttons */
+    .range-buttons {
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .range-buttons button {
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #f0f0f0;
+      transition: background-color 0.3s;
+    }
+
+    .range-buttons button:hover {
+      background-color: #ddd;
+    }
+
+    /* Chart container */
+    #chart-container {
+      width: 100%;
+      height: 400px;
+      max-height: 400px;
+      margin-bottom: 40px;
+    }
+
+    /* News section */
+    #newsSection {
+      text-align: left;
+    }
+
+    #newsSection h2 {
+      margin-bottom: 10px;
+    }
+
+    .news-item {
+      background: #fafafa;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .news-item a {
+      color: #0645ad;
+      text-decoration: none;
+    }
+
+    .news-item a:hover {
+      text-decoration: underline;
+    }
+
+    .news-item em {
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.5rem;
+      }
+
+      #searchBox {
+        max-width: 100%;
+        flex-grow: 1;
+        font-size: 0.9rem;
+      }
+
+      #searchBtn {
+        font-size: 0.9rem;
+        padding: 8px 14px;
+      }
+
+      .tickerBar {
+        font-size: 0.85rem;
+        height: 35px;
+      }
+
+      #chart-container {
+        height: 300px;
+      }
+
+      .priceInfo {
+        font-size: 1rem;
+      }
+
+      .range-buttons button {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+      }
     }
   </style>
 </head>
@@ -91,18 +243,20 @@
 <body>
   <header>
     <h1>Stock Tracker</h1>
-    <div>
-      <input id="searchBox" placeholder="Enter stock symbol or name">
-      <button id="searchBtn">Search</button>
-    </div>
+    <input id="searchBox" placeholder="Enter stock symbol or name" aria-label="Stock symbol or company name" />
+    <button id="searchBtn" aria-label="Search stock">Search</button>
   </header>
 
-  <div class="tickerBar" id="tickerBar"></div>
+  <div class="tickerBar" aria-live="polite" aria-atomic="true" role="region" aria-label="Trending stock tickers">
+    <div class="tickerContent" id="tickerContent">
+      Loading trending stocks...
+    </div>
+  </div>
 
-  <div class="container">
-    <div class="priceInfo" id="priceInfo"></div>
+  <div class="container" role="main">
+    <div class="priceInfo" id="priceInfo" aria-live="polite" aria-atomic="true"></div>
 
-    <div class="range-buttons">
+    <div class="range-buttons" role="group" aria-label="Select date range for stock data">
       <button onclick="fetchData('1d')">1D</button>
       <button onclick="fetchData('3d')">3D</button>
       <button onclick="fetchData('5d')">5D</button>
@@ -117,10 +271,10 @@
     </div>
 
     <div id="chart-container">
-      <canvas id="stockChart"></canvas>
+      <canvas id="stockChart" aria-label="Stock price chart" role="img"></canvas>
     </div>
 
-    <div id="newsSection"></div>
+    <section id="newsSection" aria-live="polite" aria-atomic="true" aria-label="Latest stock market news"></section>
   </div>
 
   <script>
@@ -136,71 +290,125 @@
     });
 
     async function fetchTrending() {
-      const res = await fetch("/trending");
-      const data = await res.json();
-      const tickerBar = document.getElementById("tickerBar");
-      tickerBar.innerHTML = "";
-      data.forEach(ticker => {
-        tickerBar.innerHTML += `<span class="tickerItem">${ticker.symbol}: $${ticker.price}</span>`;
-      });
+      try {
+        const res = await fetch("/trending");
+        const data = await res.json();
+        const tickerContent = document.getElementById("tickerContent");
+        if (!data.length) {
+          tickerContent.textContent = "No trending stocks available.";
+          return;
+        }
+
+        // Build ticker items
+        let html = "";
+        data.forEach(t => {
+          html += `<span class="tickerItem">${t.symbol}: $${t.price}</span>`;
+        });
+
+        // Repeat content twice for continuous effect
+        tickerContent.innerHTML = html + html;
+      } catch {
+        document.getElementById("tickerContent").textContent = "Failed to load trending stocks.";
+      }
     }
 
     async function fetchData(range) {
-      const res = await fetch("/stock-data", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ symbol: currentSymbol, range })
-      });
-      const data = await res.json();
-      if (data.error) {
-        alert(data.error);
-        return;
-      }
+      try {
+        const res = await fetch("/stock-data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ symbol: currentSymbol, range })
+        });
+        const data = await res.json();
 
-      const ctx = document.getElementById("stockChart").getContext("2d");
-      if (stockChart) stockChart.destroy();
-      stockChart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: data.dates,
-          datasets: [{
-            label: `${data.name} (${data.symbol})`,
-            data: data.prices,
-            borderColor: data.positive ? "green" : "red",
-            tension: 0.2
-          }]
+        if (data.error) {
+          alert(data.error);
+          return;
         }
-      });
 
-      const colorClass = data.positive ? "positive" : "negative";
-      document.getElementById("priceInfo").innerHTML = `
-        <strong>${data.name} (${data.symbol})</strong><br>
-        Current Price: $${data.current_price} <span class="${colorClass}">${data.percent_change}%</span><br>
-        Day High: $${data.day_high} | Day Low: $${data.day_low}<br>
-        52W High: $${data.high_52week} | 52W Low: $${data.low_52week}
-      `;
+        const ctx = document.getElementById("stockChart").getContext("2d");
+        if (stockChart) stockChart.destroy();
+        stockChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: data.dates,
+            datasets: [{
+              label: `${data.name} (${data.symbol})`,
+              data: data.prices,
+              borderColor: data.positive ? "green" : "red",
+              backgroundColor: "transparent",
+              tension: 0.2,
+              pointRadius: 0,
+              borderWidth: 2,
+              fill: false,
+              hoverRadius: 4
+            }]
+          },
+          options: {
+            animation: { duration: 500 },
+            scales: {
+              x: {
+                ticks: { maxTicksLimit: 10, maxRotation: 0 },
+                grid: { display: false }
+              },
+              y: {
+                beginAtZero: false,
+                grid: { color: "#ddd" }
+              }
+            },
+            plugins: {
+              legend: { display: true, position: "top" }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+          }
+        });
 
-      fetchNews();
+        const colorClass = data.positive ? "positive" : "negative";
+        document.getElementById("priceInfo").innerHTML = `
+          <strong>${data.name} (${data.symbol})</strong><br>
+          Current Price: $${data.current_price} <span class="${colorClass}">${data.percent_change}%</span><br>
+          Day High: $${data.day_high} | Day Low: $${data.day_low}<br>
+          52W High: $${data.high_52week} | 52W Low: $${data.low_52week}
+        `;
+
+        fetchNews();
+
+      } catch (e) {
+        alert("Failed to fetch stock data.");
+        console.error(e);
+      }
     }
 
     async function fetchNews() {
-      const res = await fetch("/news");
-      const news = await res.json();
-      const container = document.getElementById("newsSection");
-      container.innerHTML = "<h2>Latest News</h2>";
-      news.forEach(article => {
-        const timeAgo = new Date(article.publishedAt);
-        const diffMins = Math.floor((new Date() - timeAgo) / 60000);
-        container.innerHTML += `
-          <div class="news-item">
-            <a href="${article.url}" target="_blank"><strong>${article.title}</strong></a><br>
-            <em>${article.source} - ${diffMins} mins ago</em><br>
-            <p>${article.description}</p>
-          </div>
-        `;
-      });
+      try {
+        const res = await fetch("/news");
+        const news = await res.json();
+        const container = document.getElementById("newsSection");
+        container.innerHTML = "<h2>Latest News</h2>";
+        if (!news.length) {
+          container.innerHTML += "<p>No news available at this time.</p>";
+          return;
+        }
+
+        news.forEach(article => {
+          const timeAgo = new Date(article.publishedAt);
+          const diffMins = Math.floor((new Date() - timeAgo) / 60000);
+          container.innerHTML += `
+            <article class="news-item">
+              <a href="${article.url}" target="_blank" rel="noopener noreferrer"><strong>${article.title}</strong></a><br>
+              <em>${article.source} - ${diffMins} mins ago</em><br>
+              <p>${article.description}</p>
+            </article>
+          `;
+        });
+
+      } catch {
+        document.getElementById("newsSection").innerHTML = "<p>Failed to load news.</p>";
+      }
     }
 
+    // Initial loads
     fetchTrending();
     fetchData("1mo");
     setInterval(fetchTrending, 60000);

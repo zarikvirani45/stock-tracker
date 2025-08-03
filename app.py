@@ -19,7 +19,7 @@ def fetch_news():
             latest_news = get_fallback_news()
             return
 
-        url = f"https://newsapi.org/v2/everything"
+        url = "https://newsapi.org/v2/everything"
         params = {
             'apiKey': NEWS_API_KEY,
             'sources': 'cnbc,bloomberg,reuters,the-wall-street-journal,financial-times',
@@ -207,7 +207,7 @@ def get_news():
 def get_fallback_news():
     return [
         {
-            'title': 'Stock Market Shows Mixed Results in Today\'s Trading Session',
+            'title': "Stock Market Shows Mixed Results in Today's Trading Session",
             'description': 'Major indices display varied performance...',
             'url': 'https://finance.yahoo.com',
             'source': 'Financial News',
