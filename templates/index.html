@@ -1,181 +1,309 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Stock Tracker</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      background-color: #121212;
-      color: white;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stock Tracker</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f4f8;
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header {
+    width: 100%;
+    background-color: #004aad;
+    color: white;
+    padding: 0.5em 1em;
+    font-weight: bold;
+    font-size: 1.2em;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  #ticker-marquee {
+    display: inline-block;
+    animation: marquee 20s linear infinite;
+  }
+  @keyframes marquee {
+    0% { transform: translateX(100%);}
+    100% { transform: translateX(-100%);}
+  }
+  .ticker-item {
+    display: inline-block;
+    margin-right: 2em;
+    color: #a8caff;
+    font-weight: bold;
+  }
 
-    .container {
-      margin-top: 50px;
-    }
+  main {
+    max-width: 900px;
+    width: 100%;
+    background: white;
+    margin: 1.5em;
+    padding: 1.5em;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+    border-radius: 8px;
+    text-align: center;
+  }
+  #stock-form input[type="text"] {
+    padding: 0.5em;
+    font-size: 1em;
+    width: 200px;
+    margin-right: 0.5em;
+  }
+  #stock-form button {
+    padding: 0.5em 1em;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  .range-buttons {
+    margin-top: 1em;
+  }
+  .range-buttons button {
+    margin: 0 0.2em;
+    padding: 0.4em 0.8em;
+    font-size: 0.9em;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    background: #f7f9fc;
+    border-radius: 4px;
+  }
+  .range-buttons button.active {
+    background: #004aad;
+    color: white;
+    border-color: #003080;
+  }
 
-    .stock-info, .chart-container {
-      margin-top: 30px;
-    }
+  #stock-info {
+    margin-top: 1.5em;
+    font-size: 1.1em;
+  }
+  #price-change {
+    font-weight: bold;
+    font-size: 1.3em;
+  }
+  .positive {
+    color: green;
+  }
+  .negative {
+    color: red;
+  }
 
-    .positive {
-      color: #4caf50;
-    }
+  #chart-container {
+    margin-top: 2em;
+  }
+  canvas {
+    max-width: 100%;
+  }
 
-    .negative {
-      color: #f44336;
-    }
-
-    #news-section {
-      margin-top: 50px;
-    }
-
-    #news-section h3 {
-      border-bottom: 1px solid white;
-      padding-bottom: 10px;
-    }
-
-    .news-article {
-      background-color: #1e1e1e;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 5px;
-    }
-
-    .news-article h5 {
-      margin-bottom: 5px;
-    }
-  </style>
+  #news-section {
+    margin-top: 3em;
+    text-align: left;
+  }
+  #news-section h2 {
+    margin-bottom: 0.5em;
+  }
+  .news-article {
+    margin-bottom: 1.2em;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1em;
+  }
+  .news-article a {
+    color: #004aad;
+    font-weight: bold;
+    text-decoration: none;
+  }
+  .news-source {
+    font-size: 0.85em;
+    color: #666;
+  }
+</style>
 </head>
 <body>
-  <div class="container text-center">
-    <h1 class="mb-4">Stock Tracker</h1>
-    <div class="mb-4">
-      <input type="text" id="symbolInput" class="form-control" placeholder="Enter stock symbol (e.g. AAPL)" />
-      <select id="timeframeSelect" class="form-select mt-2">
-        <option value="1d">1 Day</option>
-        <option value="1wk">1 Week</option>
-        <option value="1mo" selected>1 Month</option>
-        <option value="3mo">3 Months</option>
-        <option value="6mo">6 Months</option>
-        <option value="1y">1 Year</option>
-        <option value="3y">3 Years</option>
-        <option value="5y">5 Years</option>
-        <option value="max">Max</option>
-      </select>
-      <button class="btn btn-primary mt-2" onclick="fetchStockData()">Get Stock Data</button>
-    </div>
 
-    <div class="stock-info" id="stockInfo" style="display: none;">
-      <h2 id="stockName"></h2>
-      <p>Current Price: <span id="currentPrice"></span></p>
-      <p>Day High: <span id="dayHigh"></span> | Day Low: <span id="dayLow"></span></p>
-      <p>52 Week High: <span id="high52Week"></span> | 52 Week Low: <span id="low52Week"></span></p>
-      <p>Change: <span id="priceChange"></span> (<span id="percentChange"></span>%)</p>
-    </div>
+<header>
+  <div id="ticker-marquee"></div>
+</header>
 
-    <div class="chart-container" style="margin-top: 30px;">
-      <canvas id="stockChart"></canvas>
-    </div>
+<main>
+  <form id="stock-form">
+    <input type="text" id="symbol-input" placeholder="Enter ticker or company name" required />
+    <button type="submit">Get Stock Data</button>
+  </form>
 
-    <div id="news-section">
-      <h3>Latest News</h3>
-      <div class="news-article">
-        <h5>Market opens higher on tech gains</h5>
-        <p>The stock market saw early gains today, led by advances in technology stocks.</p>
-      </div>
-      <div class="news-article">
-        <h5>Federal Reserve signals interest rate pause</h5>
-        <p>In a recent statement, the Fed hinted at a potential pause on interest rate hikes amid inflation cooling.</p>
-      </div>
-    </div>
+  <div class="range-buttons" id="range-buttons">
+    <button data-range="1d">1 Day</button>
+    <button data-range="3d">3 Days</button>
+    <button data-range="1wk">1 Week</button>
+    <button data-range="3wk">3 Weeks</button>
+    <button data-range="1mo" class="active">1 Month</button>
+    <button data-range="3mo">3 Months</button>
+    <button data-range="6mo">6 Months</button>
+    <button data-range="1y">1 Year</button>
+    <button data-range="3y">3 Years</button>
+    <button data-range="5y">5 Years</button>
+    <button data-range="max">Max</button>
   </div>
 
-  <script>
-    let chart;
+  <div id="stock-info"></div>
 
-    function fetchStockData() {
-      const symbol = document.getElementById("symbolInput").value.trim();
-      const timeframe = document.getElementById("timeframeSelect").value;
+  <div id="chart-container">
+    <canvas id="stock-chart" width="800" height="400"></canvas>
+  </div>
 
-      if (!symbol) {
-        alert("Please enter a stock symbol.");
-        return;
+  <section id="news-section">
+    <h2>Latest Finance News</h2>
+    <div id="news-list"></div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const form = document.getElementById('stock-form');
+  const symbolInput = document.getElementById('symbol-input');
+  const stockInfoDiv = document.getElementById('stock-info');
+  const newsList = document.getElementById('news-list');
+  const rangeButtons = document.querySelectorAll('.range-buttons button');
+  let selectedRange = '1mo';
+  let chart;
+
+  // Initialize active range button
+  function setActiveRangeButton(range) {
+    rangeButtons.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.range === range);
+    });
+  }
+
+  rangeButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      selectedRange = button.dataset.range;
+      setActiveRangeButton(selectedRange);
+      if(symbolInput.value.trim() !== '') {
+        fetchStockData(symbolInput.value.trim(), selectedRange);
       }
+    });
+  });
 
-      fetch("/stock-data", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ symbol, timeframe })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          alert(data.error);
-          return;
-        }
+  function formatNumber(num) {
+    return num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
 
-        document.getElementById("stockInfo").style.display = "block";
-        document.getElementById("stockName").innerText = `${data.name} (${data.symbol})`;
-        document.getElementById("currentPrice").innerText = `$${parseFloat(data.current_price).toFixed(2)}`;
-        document.getElementById("dayHigh").innerText = `$${parseFloat(data.day_high).toFixed(2)}`;
-        document.getElementById("dayLow").innerText = `$${parseFloat(data.day_low).toFixed(2)}`;
-        document.getElementById("high52Week").innerText = `$${parseFloat(data.high_52week).toFixed(2)}`;
-        document.getElementById("low52Week").innerText = `$${parseFloat(data.low_52week).toFixed(2)}`;
-
-        const priceChange = parseFloat(data.absolute_change).toFixed(2);
-        const percentChange = parseFloat(data.percent_change).toFixed(2);
-        const changeClass = priceChange >= 0 ? "positive" : "negative";
-
-        document.getElementById("priceChange").innerText = priceChange;
-        document.getElementById("percentChange").innerText = percentChange;
-        document.getElementById("priceChange").className = changeClass;
-        document.getElementById("percentChange").className = changeClass;
-
-        // Chart
-        if (chart) chart.destroy();
-
-        const ctx = document.getElementById("stockChart").getContext("2d");
-        chart = new Chart(ctx, {
-          type: "line",
-          data: {
-            labels: data.chart.dates,
-            datasets: [{
-              label: "Price",
-              data: data.chart.prices,
-              borderColor: "#4caf50",
-              backgroundColor: "rgba(76, 175, 80, 0.1)",
-              fill: true,
-              tension: 0.1
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                labels: { color: "white" }
-              }
-            },
-            scales: {
-              x: {
-                ticks: { color: "white" }
-              },
-              y: {
-                ticks: { color: "white" }
-              }
-            }
-          }
-        });
-      })
-      .catch(err => {
-        console.error("Fetch error:", err);
-        alert("An error occurred while fetching stock data.");
-      });
+  function updateStockInfo(data) {
+    if (data.error) {
+      stockInfoDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+      return;
     }
-  </script>
+
+    const changeClass = data.absolute_change >= 0 ? 'positive' : 'negative';
+    stockInfoDiv.innerHTML = `
+      <h2>${data.name} (${data.symbol})</h2>
+      <p>Current Price: $${formatNumber(data.current_price)}</p>
+      <p>Day High: $${formatNumber(data.day_high)} | Day Low: $${formatNumber(data.day_low)}</p>
+      <p>52 Week High: $${formatNumber(data.high_52week)} | 52 Week Low: $${formatNumber(data.low_52week)}</p>
+      <p id="price-change" class="${changeClass}">Change: ${formatNumber(data.absolute_change)} (${formatNumber(data.percent_change)}%)</p>
+    `;
+  }
+
+  function renderChart(dates, prices) {
+    const ctx = document.getElementById('stock-chart').getContext('2d');
+    if(chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [{
+          label: 'Close Price',
+          data: prices,
+          borderColor: '#004aad',
+          backgroundColor: 'rgba(0, 74, 173, 0.3)',
+          fill: true,
+          tension: 0.2,
+          pointRadius: 0,
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { display: true, title: { display: true, text: 'Date' } },
+          y: { display: true, title: { display: true, text: 'Price (USD)' }, beginAtZero: false }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+
+  async function fetchStockData(symbol, range) {
+    stockInfoDiv.innerHTML = `<p>Loading data for ${symbol}...</p>`;
+    try {
+      const response = await fetch('/stock-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol, range })
+      });
+      const data = await response.json();
+      updateStockInfo(data);
+      if(!data.error) {
+        renderChart(data.dates, data.prices);
+      } else {
+        if(chart) chart.destroy();
+      }
+    } catch(err) {
+      stockInfoDiv.innerHTML = `<p style="color:red;">Error fetching data.</p>`;
+      if(chart) chart.destroy();
+    }
+  }
+
+  // Trending ticker marquee
+  async function loadTrendingTicker() {
+    const marquee = document.getElementById('ticker-marquee');
+    try {
+      const response = await fetch('/trending');
+      const tickers = await response.json();
+      marquee.innerHTML = tickers.map(t => {
+        let color = '#a8caff';
+        return `<span class="ticker-item">${t.symbol}: $${t.price.toFixed(2)}</span>`;
+      }).join(' ');
+    } catch {
+      marquee.innerHTML = 'Trending stocks unavailable';
+    }
+  }
+
+  // Load latest news
+  async function loadNews() {
+    try {
+      const response = await fetch('/news');
+      const articles = await response.json();
+      newsList.innerHTML = articles.map(a => `
+        <div class="news-article">
+          <a href="${a.url}" target="_blank" rel="noopener">${a.title}</a>
+          <div class="news-source">${a.source} | ${new Date(a.publishedAt).toLocaleString()}</div>
+          <p>${a.description || ''}</p>
+        </div>
+      `).join('');
+    } catch {
+      newsList.innerHTML = '<p>News unavailable</p>';
+    }
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const symbol = symbolInput.value.trim();
+    if(symbol) {
+      fetchStockData(symbol, selectedRange);
+    }
+  });
+
+  // Initial load
+  loadTrendingTicker();
+  loadNews();
+</script>
 </body>
 </html>

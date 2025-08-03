@@ -4,72 +4,11 @@ import yfinance as yf
 from datetime import datetime, timedelta
 import os
 import requests
-from threading import Timer
 
 app = Flask(__name__)
 CORS(app)
 
 NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "your_newsapi_key_here")
-latest_news = []
-
-def get_fallback_news():
-    return [
-        {
-            "title": "Stock market update: fallback headline",
-            "description": "Unable to load live news. Here's a fallback headline.",
-            "url": "https://www.investopedia.com",
-            "source": "Fallback Source",
-            "publishedAt": datetime.utcnow().isoformat(),
-            "urlToImage": ""
-        },
-        {
-            "title": "Financial update: fallback headline",
-            "description": "This is a fallback news item due to an API issue.",
-            "url": "https://www.marketwatch.com",
-            "source": "Fallback Source",
-            "publishedAt": datetime.utcnow().isoformat(),
-            "urlToImage": ""
-        }
-    ]
-
-def fetch_news():
-    global latest_news
-    try:
-        if not NEWS_API_KEY or NEWS_API_KEY == "your_newsapi_key_here":
-            latest_news = get_fallback_news()
-            return
-
-        url = "https://newsapi.org/v2/everything"
-        params = {
-            'apiKey': NEWS_API_KEY,
-            'sources': 'cnbc,bloomberg,reuters,the-wall-street-journal,financial-times',
-            'q': 'stock market OR finance OR economy OR trading',
-            'sortBy': 'publishedAt',
-            'pageSize': 10,
-            'language': 'en'
-        }
-
-        response = requests.get(url, params=params, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            if data.get('status') == 'ok':
-                latest_news = [
-                    {
-                        'title': a['title'],
-                        'description': a.get('description', ''),
-                        'url': a['url'],
-                        'source': a['source']['name'],
-                        'publishedAt': a['publishedAt'],
-                        'urlToImage': a.get('urlToImage', '')
-                    }
-                    for a in data.get('articles', []) if a.get('title')
-                ]
-        else:
-            latest_news = get_fallback_news()
-    except Exception:
-        latest_news = get_fallback_news()
-
-    Timer(60.0, fetch_news).start()
 
 @app.route('/')
 def home():
@@ -78,49 +17,24 @@ def home():
 @app.route('/stock-data', methods=['POST'])
 def stock_data():
     data = request.get_json()
-    user_input = data.get("symbol", "").strip()
+    symbol = data.get("symbol", "").upper()
     range_code = data.get("range", "1mo")
-
-    def resolve_symbol(user_input):
-        try:
-            search_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={user_input}"
-            res = requests.get(search_url, timeout=5)
-            if res.status_code != 200:
-                return None
-            results = res.json().get("quotes", [])
-
-            user_lower = user_input.lower()
-
-            # Search all quotes (stocks, ETFs, mutual funds, etc.)
-            # Return the first symbol with exact case-insensitive match
-            for r in results:
-                symbol = r.get("symbol", "")
-                if symbol.lower() == user_lower:
-                    return symbol.upper()
-
-            return None
-        except Exception:
-            return None
-
-    symbol = resolve_symbol(user_input)
-
-    if not symbol:
-        return jsonify({"error": "Invalid stock, ETF, or mutual fund symbol."})
 
     try:
         ticker = yf.Ticker(symbol)
         info = ticker.info
-
+        
         current_price = info.get("currentPrice") or info.get("regularMarketPrice")
         if current_price is None:
-            return jsonify({"error": "Invalid symbol or data unavailable."})
+            return jsonify({"error": "Invalid stock symbol or data unavailable."})
 
         end_date = datetime.today()
+
         range_map = {
             "1d": timedelta(days=1),
             "3d": timedelta(days=3),
-            "5d": timedelta(days=5),
             "1wk": timedelta(weeks=1),
+            "3wk": timedelta(weeks=3),
             "1mo": timedelta(weeks=4),
             "3mo": timedelta(weeks=12),
             "6mo": timedelta(weeks=26),
@@ -134,7 +48,7 @@ def stock_data():
             hist = ticker.history(period="max")
         else:
             start_date = end_date - range_map.get(range_code, timedelta(weeks=4))
-            hist = ticker.history(start=start_date, end=end_date)
+            hist = ticker.history(start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
 
         hist = hist.dropna()
         if hist.empty:
@@ -159,8 +73,7 @@ def stock_data():
             "dates": dates,
             "prices": prices,
             "absolute_change": absolute_change,
-            "percent_change": percent_change,
-            "positive": percent_change >= 0
+            "percent_change": percent_change
         }
 
         return jsonify(stock_summary)
@@ -168,7 +81,72 @@ def stock_data():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+@app.route('/news')
+def get_news():
+    if not NEWS_API_KEY or NEWS_API_KEY == "your_newsapi_key_here":
+        print("NewsAPI key not set properly. Using fallback news.")
+        return get_fallback_news()
+
+    try:
+        url = "https://newsapi.org/v2/everything"
+        params = {
+            'apiKey': NEWS_API_KEY,
+            'sources': 'cnbc,bloomberg,reuters,the-wall-street-journal,financial-times',
+            'q': 'stock market OR finance OR economy OR trading',
+            'sortBy': 'publishedAt',
+            'pageSize': 10,
+            'language': 'en'
+        }
+        response = requests.get(url, params=params, timeout=10)
+
+        if response.status_code != 200:
+            print(f"News API returned status {response.status_code}")
+            return get_fallback_news()
+
+        news_data = response.json()
+        if news_data.get('status') == 'error':
+            print(f"NewsAPI error: {news_data.get('message')}")
+            return get_fallback_news()
+
+        articles = []
+        for article in news_data.get('articles', []):
+            if article.get('title') and article.get('url') and article.get('publishedAt'):
+                articles.append({
+                    'title': article['title'],
+                    'description': article.get('description', ''),
+                    'url': article['url'],
+                    'source': article['source']['name'],
+                    'publishedAt': article['publishedAt'],
+                    'urlToImage': article.get('urlToImage', '')
+                })
+
+        return jsonify(articles)
+
+    except Exception as e:
+        print(f"Error fetching news: {e}")
+        return get_fallback_news()
+
+def get_fallback_news():
+    fallback_articles = [
+        {
+            'title': 'Stock Market Shows Mixed Results in Today\'s Trading Session',
+            'description': 'Major indices display varied performance...',
+            'url': 'https://finance.yahoo.com',
+            'source': 'Financial News',
+            'publishedAt': datetime.now().isoformat(),
+            'urlToImage': ''
+        },
+        {
+            'title': 'Tech Stocks Lead Market Volatility Amid Interest Rate Concerns',
+            'description': 'Technology sector experiences heightened volatility...',
+            'url': 'https://finance.yahoo.com',
+            'source': 'Market Watch',
+            'publishedAt': (datetime.now() - timedelta(hours=1)).isoformat(),
+            'urlToImage': ''
+        }
+    ]
+    return jsonify(fallback_articles)
+
 if __name__ == '__main__':
-    fetch_news()
     port = int(os.environ.get("PORT", 5051))
     app.run(debug=True, host='0.0.0.0', port=port)
