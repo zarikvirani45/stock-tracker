@@ -124,6 +124,100 @@
       margin-top: 10px;
       color: #006400;
     }
+
+    /* NEWS FEED STYLES */
+    #newsContainer {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 700px;
+      text-align: left;
+      margin-bottom: 40px;
+    }
+
+    #newsContainer h2 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #003366;
+      padding-bottom: 10px;
+    }
+
+    .news-item {
+      border-bottom: 1px solid #eee;
+      padding: 15px 0;
+      margin-bottom: 15px;
+    }
+
+    .news-item:last-child {
+      border-bottom: none;
+    }
+
+    .news-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #003366;
+      text-decoration: none;
+      line-height: 1.4;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .news-title:hover {
+      color: #00509e;
+      text-decoration: underline;
+    }
+
+    .news-description {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .news-meta {
+      font-size: 12px;
+      color: #999;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .news-source {
+      font-weight: bold;
+      color: #003366;
+    }
+
+    .news-time {
+      font-style: italic;
+    }
+
+    #newsLoading {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      padding: 20px;
+    }
+
+    .news-image {
+      width: 100%;
+      max-width: 150px;
+      height: auto;
+      border-radius: 5px;
+      float: right;
+      margin-left: 15px;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .news-image {
+        float: none;
+        margin: 10px auto;
+        display: block;
+      }
+    }
   </style>
 </head>
 <body>
@@ -140,6 +234,8 @@
 
     <div class="time-buttons" aria-label="Timeframe selection">
       <button onclick="updateChart('1d')">1 Day</button>
+      <button onclick="updateChart('3d')">3 Days</button>
+      <button onclick="updateChart('5d')">5 Days</button>
       <button onclick="updateChart('1wk')">1 Week</button>
       <button onclick="updateChart('1mo')">1 Month</button>
       <button onclick="updateChart('3mo')">3 Months</button>
@@ -153,10 +249,19 @@
     <canvas id="stockChart"></canvas>
   </div>
 
+  <!-- NEWS FEED CONTAINER - Only shows when no stock is searched -->
+  <div id="newsContainer">
+    <h2>📰 Latest Financial News</h2>
+    <div id="newsLoading">Loading latest financial news...</div>
+    <div id="newsFeed"></div>
+  </div>
+
   <script>
     let stockData = null;
     let chart = null;
     let currentRange = "1mo"; // default timeframe
+    let newsUpdateInterval = null;
+    let isStockSearched = false;
 
     // Fetch and update trending tickers in the ticker bar
     function fetchTrending() {
@@ -179,6 +284,78 @@
         });
     }
 
+    // Fetch and display news
+    function fetchNews() {
+      fetch('/news')
+        .then(res => res.json())
+        .then(articles => {
+          const newsLoading = document.getElementById('newsLoading');
+          const newsFeed = document.getElementById('newsFeed');
+          
+          newsLoading.style.display = 'none';
+          
+          if (!articles || articles.length === 0) {
+            newsFeed.innerHTML = '<p style="text-align: center; color: #666;">No news available at the moment.</p>';
+            return;
+          }
+          
+          newsFeed.innerHTML = '';
+          
+          articles.forEach(article => {
+            const publishedDate = new Date(article.publishedAt);
+            const timeAgo = getTimeAgo(publishedDate);
+            
+            const newsItem = document.createElement('div');
+            newsItem.className = 'news-item';
+            
+            newsItem.innerHTML = `
+              ${article.urlToImage ? `<img src="${article.urlToImage}" alt="News image" class="news-image" onerror="this.style.display='none'">` : ''}
+              <a href="${article.url}" target="_blank" class="news-title">${article.title}</a>
+              ${article.description ? `<div class="news-description">${article.description}</div>` : ''}
+              <div class="news-meta">
+                <span class="news-source">${article.source}</span>
+                <span class="news-time">${timeAgo}</span>
+              </div>
+            `;
+            
+            newsFeed.appendChild(newsItem);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching news:', error);
+          document.getElementById('newsLoading').style.display = 'none';
+          document.getElementById('newsFeed').innerHTML = '<p style="text-align: center; color: #666;">Failed to load news. Please try again later.</p>';
+        });
+    }
+
+    // Helper function to calculate time ago
+    function getTimeAgo(date) {
+      const now = new Date();
+      const diffInSeconds = Math.floor((now - date) / 1000);
+      
+      if (diffInSeconds < 60) return 'Just now';
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+      return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    }
+
+    // Start news updates (every 30 seconds)
+    function startNewsUpdates() {
+      fetchNews();
+      if (newsUpdateInterval) clearInterval(newsUpdateInterval);
+      newsUpdateInterval = setInterval(() => {
+        if (!isStockSearched) {
+          fetchNews();
+        }
+      }, 30000); // 30 seconds
+    }
+
+    // Show/hide news container based on search state
+    function toggleNewsContainer(show) {
+      const newsContainer = document.getElementById('newsContainer');
+      newsContainer.style.display = show ? 'block' : 'none';
+    }
+
     // Fetch stock data for symbol and default timeframe (1mo)
     function fetchStockData() {
       const symbol = document.getElementById("symbolInput").value.trim();
@@ -186,6 +363,10 @@
         alert("Please enter a stock symbol.");
         return;
       }
+
+      // Hide news when stock is searched
+      isStockSearched = true;
+      toggleNewsContainer(false);
 
       fetch("/stock-data", {
         method: "POST",
@@ -196,6 +377,9 @@
       .then(data => {
         if (data.error) {
           alert("Error: " + data.error);
+          // Show news again if there was an error
+          isStockSearched = false;
+          toggleNewsContainer(true);
           return;
         }
         stockData = data;
@@ -204,6 +388,9 @@
       })
       .catch(err => {
         alert("Fetch error: " + err);
+        // Show news again if there was an error
+        isStockSearched = false;
+        toggleNewsContainer(true);
       });
     }
 
@@ -315,6 +502,8 @@
     function friendlyRange(range) {
       const labels = {
         "1d": "Last Day",
+        "3d": "Last 3 Days",
+        "5d": "Last 5 Days",
         "1wk": "Last Week",
         "1mo": "Last Month",
         "3mo": "Last 3 Months",
@@ -336,7 +525,29 @@
     // Initialize page
     window.onload = () => {
       startTrendingUpdates();
+      startNewsUpdates(); // Start news updates
+      toggleNewsContainer(true); // Show news initially
     };
+
+    // Add functionality to clear search and show news again
+    document.getElementById('symbolInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        fetchStockData();
+      }
+    });
+
+    
+    function clearSearch() {
+      document.getElementById('symbolInput').value = '';
+      document.getElementById('stockInfo').innerHTML = '';
+      if (chart) {
+        chart.destroy();
+        chart = null;
+      }
+      stockData = null;
+      isStockSearched = false;
+      toggleNewsContainer(true);
+    }
   </script>
 </body>
 </html>
