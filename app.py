@@ -64,22 +64,49 @@ def stock_data():
 
     def resolve_symbol(user_input):
         try:
+            # Use Yahoo Finance search API to get list of possible matches
             search_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={user_input}"
             res = requests.get(search_url, timeout=5)
             results = res.json().get("quotes", [])
-            if results:
-                symbols = [r["symbol"] for r in results if "symbol" in r]
-                names = [r["shortname"] for r in results if "shortname" in r]
-                matches = get_close_matches(user_input.lower(), names + symbols, n=1, cutoff=0.3)
-                if matches:
-                    for r in results:
-                        if r.get("symbol") and (r.get("shortname", "").lower() == matches[0] or r["symbol"].lower() == matches[0]):
-                            ticker = yf.Ticker(r["symbol"])
-                            return r["symbol"].upper(), ticker.info
-        except:
-            pass
 
-        return None, None
+            if not results:
+                return None, None
+
+            # Prepare lists for matching
+            symbols = [r.get("symbol", "").lower() for r in results]
+            names = [r.get("shortname", "").lower() for r in results if r.get("shortname")]
+
+            user_lower = user_input.lower()
+
+            # 1. Check for exact symbol match
+            for r in results:
+                if r.get("symbol", "").lower() == user_lower:
+                    ticker = yf.Ticker(r["symbol"])
+                    return r["symbol"].upper(), ticker.info
+
+            # 2. Check for exact name match (ignore case)
+            for r in results:
+                if r.get("shortname", "").lower() == user_lower:
+                    ticker = yf.Ticker(r["symbol"])
+                    return r["symbol"].upper(), ticker.info
+
+            # 3. Fuzzy match user input against symbols and names combined
+            combined_list = symbols + names
+            matches = get_close_matches(user_lower, combined_list, n=1, cutoff=0.3)
+            if matches:
+                matched = matches[0]
+                # Find the full record that matches this
+                for r in results:
+                    sym = r.get("symbol", "").lower()
+                    nm = r.get("shortname", "").lower()
+                    if matched == sym or matched == nm:
+                        ticker = yf.Ticker(r["symbol"])
+                        return r["symbol"].upper(), ticker.info
+
+            # 4. As fallback, if no matches, return None
+            return None, None
+        except Exception:
+            return None, None
 
     symbol, info = resolve_symbol(user_input)
 
@@ -111,7 +138,7 @@ def stock_data():
         if range_code == "max":
             hist = ticker.history(period="max")
         else:
-            start_date = end_date - range_map[range_code]
+            start_date = end_date - range_map.get(range_code, timedelta(weeks=4))
             hist = ticker.history(start=start_date, end=end_date)
 
         hist = hist.dropna()
@@ -224,4 +251,3 @@ if __name__ == '__main__':
     fetch_news()
     port = int(os.environ.get("PORT", 5051))
     app.run(debug=True, host='0.0.0.0', port=port)
-
