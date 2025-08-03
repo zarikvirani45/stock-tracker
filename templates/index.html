@@ -204,6 +204,13 @@ body.dark-mode .negative {
 body.dark-mode a {
   color: #7ec0ff !important;
 }
+
+/* Popular Stocks sidebar styling */
+@media (max-width: 768px) {
+  #popular-stocks {
+    display: none; /* Hide sidebar on smaller/mobile screens */
+  }
+}
   </style>
 </head>
 <body>
@@ -235,6 +242,55 @@ body.dark-mode a {
       <button data-range="5y">5 Years</button>
       <button data-range="max">Max</button>
     </div>
+
+    <!-- Popular Stocks Sidebar -->
+    <div id="popular-stocks" aria-label="Popular Stocks quick selection" style="
+      position: fixed;
+      top: 7.5em;
+      right: 1em;
+      background: #004aad;
+      padding: 1em;
+      border-radius: 8px;
+      max-width: 160px;
+      font-weight: bold;
+      font-size: 1em;
+      color: white;
+      box-shadow: 0 0 10px rgba(0, 74, 173, 0.7);
+      z-index: 1000;
+    ">
+      <div style="margin-bottom: 0.5em;">Popular Stocks</div>
+      <button class="popular-stock-btn" data-symbol="AAPL" style="
+        background: #004aad; color: white; border: 1px solid white;
+        padding: 0.5em; border-radius: 4px; width: 100%;
+        margin-bottom: 0.4em; cursor: pointer;
+        font-weight: 600;
+      ">AAPL</button>
+      <button class="popular-stock-btn" data-symbol="NVDA" style="
+        background: #004aad; color: white; border: 1px solid white;
+        padding: 0.5em; border-radius: 4px; width: 100%;
+        margin-bottom: 0.4em; cursor: pointer;
+        font-weight: 600;
+      ">NVDA</button>
+      <button class="popular-stock-btn" data-symbol="VOO" style="
+        background: #004aad; color: white; border: 1px solid white;
+        padding: 0.5em; border-radius: 4px; width: 100%;
+        margin-bottom: 0.4em; cursor: pointer;
+        font-weight: 600;
+      ">VOO</button>
+      <button class="popular-stock-btn" data-symbol="QQQM" style="
+        background: #004aad; color: white; border: 1px solid white;
+        padding: 0.5em; border-radius: 4px; width: 100%;
+        margin-bottom: 0.4em; cursor: pointer;
+        font-weight: 600;
+      ">QQQM</button>
+      <button class="popular-stock-btn" data-symbol="MSFT" style="
+        background: #004aad; color: white; border: 1px solid white;
+        padding: 0.5em; border-radius: 4px; width: 100%;
+        cursor: pointer;
+        font-weight: 600;
+      ">MSFT</button>
+    </div>
+
     <div id="stock-info"></div>
     <div id="chart-container">
       <canvas id="stock-chart" width="800" height="400"></canvas>
@@ -395,6 +451,15 @@ body.dark-mode a {
       if (symbol) {
         fetchStockData(symbol, selectedRange);
       }
+    });
+
+    // Popular Stocks button clicks
+    document.querySelectorAll('.popular-stock-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const symbol = btn.getAttribute('data-symbol');
+        symbolInput.value = symbol;               // Update input box
+        fetchStockData(symbol, selectedRange);   // Fetch stock data & update chart
+      });
     });
 
     loadNews();
