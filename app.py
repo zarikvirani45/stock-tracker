@@ -24,7 +24,7 @@ def stock_data():
         ticker = yf.Ticker(symbol)
         info = ticker.info
 
-        current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+        current_price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose")
         if current_price is None:
             return jsonify({"error": "Invalid stock symbol or data unavailable."})
 
@@ -91,7 +91,7 @@ def ticker_prices():
 
         for symbol in symbols:
             info = tickers[symbol].info
-            price = info.get("currentPrice") or info.get("regularMarketPrice")
+            price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose")
             if price is not None:
                 results.append({
                     "symbol": symbol,
@@ -99,7 +99,7 @@ def ticker_prices():
                 })
 
         return jsonify(results)
-    
+
     except Exception as e:
         return jsonify({"error": f"Failed to retrieve ticker data: {str(e)}"})
 
