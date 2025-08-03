@@ -15,7 +15,6 @@
       align-items: center;
     }
 
-    /* Title */
     .page-title {
       margin-top: 1em;
       font-size: 2em;
@@ -23,29 +22,28 @@
       color: #004aad;
     }
 
-    /* Ticker strips */
     header, .price-strip {
       width: 100%;
       overflow: hidden;
       white-space: nowrap;
       padding: 0.5em 1em;
-      background: black;
+      background: #004aad; /* changed from black to blue */
     }
 
     #ticker-marquee, #price-marquee {
       display: inline-block;
-      animation: marquee 25s linear infinite;
+      animation: marquee-right 25s linear infinite;
     }
 
-    @keyframes marquee {
-      0% { transform: translateX(100%); }
-      100% { transform: translateX(-100%); }
+    @keyframes marquee-right {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
     }
 
     .ticker-item {
       display: inline-block;
       margin-right: 2em;
-      color: #a8caff;
+      color: #ffffff; /* changed from #a8caff to white */
       font-weight: bold;
     }
 
@@ -53,23 +51,23 @@
       max-width: 900px;
       width: 100%;
       background: white;
-      margin: 1.5em;
-      padding: 1.5em;
+      margin: 1em;
+      padding: 1em;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       border-radius: 8px;
       text-align: center;
     }
 
     #stock-form input[type="text"] {
-      padding: 0.5em;
-      font-size: 1em;
-      width: 200px;
+      padding: 0.4em;
+      font-size: 0.95em;
+      width: 180px;
       margin-right: 0.5em;
     }
 
     #stock-form button {
-      padding: 0.5em 1em;
-      font-size: 1em;
+      padding: 0.4em 1em;
+      font-size: 0.95em;
       cursor: pointer;
     }
 
@@ -79,8 +77,8 @@
 
     .range-buttons button {
       margin: 0 0.2em;
-      padding: 0.4em 0.8em;
-      font-size: 0.9em;
+      padding: 0.35em 0.7em;
+      font-size: 0.85em;
       cursor: pointer;
       border: 1px solid #ccc;
       background: #f7f9fc;
@@ -95,12 +93,12 @@
 
     #stock-info {
       margin-top: 1.5em;
-      font-size: 1.1em;
+      font-size: 1em;
     }
 
     #price-change {
       font-weight: bold;
-      font-size: 1.3em;
+      font-size: 1.2em;
     }
 
     .positive {
@@ -120,7 +118,7 @@
     }
 
     #news-section {
-      margin-top: 3em;
+      margin-top: 2em;
       text-align: left;
     }
 
@@ -156,7 +154,7 @@
     <div id="ticker-marquee"></div>
   </header>
 
-  <!-- Black Strip for Current Prices -->
+  <!-- Blue Strip for Current Prices -->
   <div class="price-strip">
     <div id="price-marquee">
       AAPL: $192.30 &nbsp;&nbsp;&nbsp; TSLA: $253.40 &nbsp;&nbsp;&nbsp; AMZN: $134.65 &nbsp;&nbsp;&nbsp; GOOG: $141.23
@@ -338,3 +336,4 @@
   </script>
 </body>
 </html>
+
