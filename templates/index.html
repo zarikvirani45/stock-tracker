@@ -17,33 +17,33 @@
 
     .page-title {
       margin-top: 1em;
-      font-size: 2em;
+      font-size: 1.8em;
       font-weight: bold;
       color: #004aad;
     }
 
-    header, .price-strip {
+    .price-strip {
       width: 100%;
       overflow: hidden;
       white-space: nowrap;
       padding: 0.5em 1em;
-      background: #004aad; /* changed from black to blue */
+      background: #004aad;
     }
 
-    #ticker-marquee, #price-marquee {
+    #price-marquee {
       display: inline-block;
-      animation: marquee-right 25s linear infinite;
+      animation: marquee-left 25s linear infinite;
     }
 
-    @keyframes marquee-right {
+    @keyframes marquee-left {
       0% { transform: translateX(-100%); }
       100% { transform: translateX(100%); }
     }
 
-    .ticker-item {
+    .price-strip .ticker-item {
       display: inline-block;
       margin-right: 2em;
-      color: #ffffff; /* changed from #a8caff to white */
+      color: #ffffff;
       font-weight: bold;
     }
 
@@ -51,23 +51,23 @@
       max-width: 900px;
       width: 100%;
       background: white;
-      margin: 1em;
-      padding: 1em;
+      margin: 1.5em;
+      padding: 1.5em;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       border-radius: 8px;
       text-align: center;
     }
 
     #stock-form input[type="text"] {
-      padding: 0.4em;
-      font-size: 0.95em;
+      padding: 0.5em;
+      font-size: 1em;
       width: 180px;
       margin-right: 0.5em;
     }
 
     #stock-form button {
-      padding: 0.4em 1em;
-      font-size: 0.95em;
+      padding: 0.5em 1em;
+      font-size: 1em;
       cursor: pointer;
     }
 
@@ -77,7 +77,7 @@
 
     .range-buttons button {
       margin: 0 0.2em;
-      padding: 0.35em 0.7em;
+      padding: 0.4em 0.8em;
       font-size: 0.85em;
       cursor: pointer;
       border: 1px solid #ccc;
@@ -93,12 +93,12 @@
 
     #stock-info {
       margin-top: 1.5em;
-      font-size: 1em;
+      font-size: 1.1em;
     }
 
     #price-change {
       font-weight: bold;
-      font-size: 1.2em;
+      font-size: 1.3em;
     }
 
     .positive {
@@ -118,7 +118,7 @@
     }
 
     #news-section {
-      margin-top: 2em;
+      margin-top: 3em;
       text-align: left;
     }
 
@@ -146,18 +146,16 @@
 </head>
 <body>
 
-  <!-- Page Title -->
+  <!-- Title -->
   <div class="page-title">Stock Tracker</div>
 
-  <!-- Running Trending Ticker -->
-  <header>
-    <div id="ticker-marquee"></div>
-  </header>
-
-  <!-- Blue Strip for Current Prices -->
+  <!-- Stock Prices Marquee (only ticker now) -->
   <div class="price-strip">
     <div id="price-marquee">
-      AAPL: $192.30 &nbsp;&nbsp;&nbsp; TSLA: $253.40 &nbsp;&nbsp;&nbsp; AMZN: $134.65 &nbsp;&nbsp;&nbsp; GOOG: $141.23
+      <span class="ticker-item">AAPL: $192.30</span>
+      <span class="ticker-item">TSLA: $253.40</span>
+      <span class="ticker-item">AMZN: $134.65</span>
+      <span class="ticker-item">GOOG: $141.23</span>
     </div>
   </div>
 
@@ -294,19 +292,6 @@
       }
     }
 
-    async function loadTrendingTicker() {
-      const marquee = document.getElementById('ticker-marquee');
-      try {
-        const response = await fetch('/trending');
-        const tickers = await response.json();
-        marquee.innerHTML = tickers.map(t =>
-          `<span class="ticker-item">${t.symbol}: $${t.price.toFixed(2)}</span>`
-        ).join(' ');
-      } catch {
-        marquee.innerHTML = 'Trending stocks unavailable';
-      }
-    }
-
     async function loadNews() {
       try {
         const response = await fetch('/news');
@@ -331,9 +316,7 @@
       }
     });
 
-    loadTrendingTicker();
     loadNews();
   </script>
 </body>
 </html>
-
