@@ -20,6 +20,7 @@
       font-size: 1.8em;
       font-weight: bold;
       color: #004aad;
+      text-align: center;
     }
 
     .price-strip {
@@ -27,7 +28,7 @@
       overflow: hidden;
       white-space: nowrap;
       padding: 0.5em 1em;
-      background: #004aad; /* blue background */
+      background: #004aad;
     }
 
     #price-marquee {
@@ -43,40 +44,45 @@
     .price-strip .ticker-item {
       display: inline-block;
       margin-right: 2em;
-      color: #ffffff;  /* white text */
+      color: #ffffff;
       font-weight: bold;
     }
 
     main {
+      width: 95%;
       max-width: 900px;
-      width: 100%;
       background: white;
-      margin: 1.5em;
-      padding: 1.5em;
+      margin: 1.5em auto;
+      padding: 1em;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       border-radius: 8px;
       text-align: center;
     }
 
-    #stock-form input[type="text"] {
-      padding: 0.5em;
-      font-size: 1em;
-      width: 180px;
-      margin-right: 0.5em;
+    #stock-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
+    #stock-form input[type="text"],
     #stock-form button {
-      padding: 0.5em 1em;
+      width: 90%;
+      max-width: 300px;
+      margin: 0.3em 0;
+      padding: 0.5em;
       font-size: 1em;
-      cursor: pointer;
     }
 
     .range-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
       margin-top: 1em;
     }
 
     .range-buttons button {
-      margin: 0 0.2em;
+      margin: 0.2em;
       padding: 0.4em 0.8em;
       font-size: 0.85em;
       cursor: pointer;
@@ -111,10 +117,13 @@
 
     #chart-container {
       margin-top: 2em;
+      width: 100%;
+      overflow-x: auto;
     }
 
     canvas {
-      max-width: 100%;
+      width: 100% !important;
+      height: auto !important;
     }
 
     #news-section {
@@ -124,6 +133,7 @@
 
     #news-section h2 {
       margin-bottom: 0.5em;
+      text-align: center;
     }
 
     .news-article {
@@ -146,10 +156,8 @@
 </head>
 <body>
 
-  <!-- Title -->
   <div class="page-title">📈 Stock Tracker</div>
 
-  <!-- Stock Prices Marquee -->
   <div class="price-strip">
     <div id="price-marquee">
       <span class="ticker-item">AAPL: $192.30</span>
