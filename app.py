@@ -102,7 +102,25 @@ def ticker_prices():
 
     except Exception as e:
         return jsonify({"error": f"Failed to retrieve ticker data: {str(e)}"})
+@app.route('/api/live-ticker')
+def live_ticker():
+    symbols = ["AAPL", "NVDA", "MSFT", "META", "TSLA", "AMZN", "AMD", "GOOG", "PLTR"]
+    try:
+        data = yf.download(tickers=' '.join(symbols), period="1d", interval="1m", group_by='ticker', progress=False, threads=True)
+        latest_prices = []
 
+        for symbol in symbols:
+            try:
+                df = data[symbol]
+                if not df.empty:
+                    last_price = round(df['Close'].dropna().iloc[-1], 2)
+                    latest_prices.append({"symbol": symbol, "price": last_price})
+            except Exception as inner_e:
+                continue  # skip symbol if data missing
+
+        return jsonify(latest_prices)
+    except Exception as e:
+        return jsonify({"error": str(e)})
 @app.route('/news')
 def get_news():
     if not NEWS_API_KEY or NEWS_API_KEY == "your_newsapi_key_here":
