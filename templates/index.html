@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Stock Dashboard</title>
   <style>
     * {
@@ -83,14 +83,14 @@
     }
 
     #chart-container {
-      height: 500px;
-      max-width: 1000px;
+      height: 400px;
+      max-width: 900px;
       margin: 2rem auto;
     }
 
     .priceInfo {
       text-align: center;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       padding: 1rem;
     }
 
@@ -140,11 +140,11 @@
       }
 
       #chart-container {
-        height: 320px;
+        height: 280px;
       }
 
       .priceInfo {
-        font-size: 1rem;
+        font-size: 0.95rem;
       }
     }
   </style>
@@ -161,7 +161,7 @@
   </div>
 
   <div id="searchContainer">
-    <input type="text" id="searchBox" placeholder="Enter stock symbol or company name">
+    <input type="text" id="searchBox" placeholder="Enter stock symbol or company name" />
     <button id="searchBtn">Search</button>
   </div>
 
@@ -178,67 +178,127 @@
     let stockChart;
 
     document.getElementById('searchBtn').addEventListener('click', () => {
-      const input = document.getElementById('searchBox').value;
+      const input = document.getElementById('searchBox').value.trim();
       if (!input) return;
 
-      fetch(`/search?input=${encodeURIComponent(input)}`)
+      fetch('/stock-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: input, range: '1mo' })
+      })
         .then(res => res.json())
         .then(data => {
-          updatePrice(data.price, data.change_percent);
-          updateChart(data.chart_data);
-          updateNews(data.news);
+          if(data.error) {
+            alert(data.error);
+            return;
+          }
+          updatePrice(data.current_price, data.percent_change);
+          updateChart(data.dates, data.prices, data.name, data.symbol, data.percent_change);
+          fetchNews();
         })
         .catch(err => console.error(err));
     });
 
-    function updatePrice(price, change) {
+    function updatePrice(price, changePercent) {
       const el = document.getElementById('priceDetails');
-      const color = change.startsWith('-') ? 'red' : 'green';
-      el.innerHTML = `<span style="color:${color};">Price: $${price}</span> <span style="color:${color};">(${change})</span>`;
+      const isPositive = changePercent >= 0;
+      const color = isPositive ? 'green' : 'red';
+      const formattedPrice = price.toFixed(2);
+      const formattedChange = changePercent.toFixed(2);
+
+      el.innerHTML = `Price: <span style="color:${color};">$${formattedPrice}</span> <span style="color:${color};">(${formattedChange}%)</span>`;
     }
 
-    function updateChart(chartData) {
+    function updateChart(labels, prices, name, symbol, changePercent) {
       const ctx = document.getElementById('stockChart').getContext('2d');
       if (stockChart) stockChart.destroy();
+      const isPositive = changePercent >= 0;
+      const borderColor = isPositive ? 'green' : 'red';
+
       stockChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: chartData.timestamps,
+          labels: labels,
           datasets: [{
-            label: 'Price',
-            data: chartData.prices,
-            borderColor: '#007bff',
-            fill: false
+            label: `${name} (${symbol})`,
+            data: prices,
+            borderColor: borderColor,
+            backgroundColor: 'transparent',
+            tension: 0.2,
+            pointRadius: 0,
+            borderWidth: 2,
+            fill: false,
+            hoverRadius: 4
           }]
         },
         options: {
+          animation: { duration: 500 },
+          scales: {
+            x: {
+              ticks: { maxTicksLimit: 10, maxRotation: 0 },
+              grid: { display: false }
+            },
+            y: {
+              beginAtZero: false,
+              grid: { color: '#ddd' }
+            }
+          },
+          plugins: {
+            legend: { display: true, position: 'top' }
+          },
           responsive: true,
           maintainAspectRatio: false
         }
       });
     }
 
-    function updateNews(newsArray) {
-      const section = document.getElementById('newsSection');
-      section.innerHTML = '';
-      newsArray.forEach(news => {
-        const div = document.createElement('div');
-        div.className = 'newsItem';
-        div.innerHTML = `<h4><a href="${news.url}" target="_blank">${news.title}</a></h4><p>${news.source} - ${news.time}</p>`;
-        section.appendChild(div);
-      });
+    async function fetchTrending() {
+      try {
+        const res = await fetch('/trending');
+        const data = await res.json();
+        const ticker = document.getElementById('ticker');
+        if (!data.length) {
+          ticker.textContent = "No trending stocks available.";
+          return;
+        }
+        // Build ticker items and duplicate for continuous scroll
+        const items = data.map(t => `<span class="tickerItem">${t.symbol}: $${t.price.toFixed(2)}</span>`).join('');
+        ticker.innerHTML = items + items;
+      } catch {
+        document.getElementById('ticker').textContent = "Failed to load trending stocks.";
+      }
     }
 
-    function loadTrendingTickers() {
-      fetch('/trending')
-        .then(res => res.json())
-        .then(data => {
-          const ticker = document.getElementById('ticker');
-          ticker.innerHTML = data.map(t => `<span class="tickerItem">${t}</span>`).join('');
+    async function fetchNews() {
+      try {
+        const res = await fetch('/news');
+        const news = await res.json();
+        const container = document.getElementById('newsSection');
+        container.innerHTML = '<h2>Latest News</h2>';
+        if (!news.length) {
+          container.innerHTML += '<p>No news available at this time.</p>';
+          return;
+        }
+
+        news.forEach(article => {
+          const publishedAt = new Date(article.publishedAt);
+          const diffMins = Math.floor((new Date() - publishedAt) / 60000);
+          container.innerHTML += `
+            <article class="newsItem">
+              <h4><a href="${article.url}" target="_blank" rel="noopener noreferrer">${article.title}</a></h4>
+              <p><em>${article.source} - ${diffMins} mins ago</em></p>
+              <p>${article.description}</p>
+            </article>
+          `;
         });
+      } catch {
+        document.getElementById('newsSection').innerHTML = '<p>Failed to load news.</p>';
+      }
     }
 
-    loadTrendingTickers();
+    // Load trending tickers and initial news on page load
+    fetchTrending();
+    fetchNews();
   </script>
 </body>
 </html>
