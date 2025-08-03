@@ -1,171 +1,408 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stock Tracker</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📈Stock Tracker</title>
   <style>
     body {
       font-family: Arial, sans-serif;
+      background: #f0f4f8;
       margin: 0;
       padding: 0;
-      background-color: #f4f4f4;
-      color: #333;
     }
-
-    body.dark-mode {
-      background-color: #121212;
-      color: #f4f4f4;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: auto;
-      padding: 2em;
-    }
-
+html, body {
+  height: auto;
+  min-height: 100%;
+  overflow-y: auto;
+}
     .page-title {
+      margin-top: 1em;
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #004aad;
       text-align: center;
-      font-size: 2em;
-      margin-bottom: 1em;
     }
 
-    .form-group {
-      text-align: center;
-      margin-bottom: 2em;
-    }
-
-    input[type="text"] {
-      padding: 0.5em;
-      width: 60%;
-      max-width: 300px;
-      margin-right: 0.5em;
-    }
-
-    button {
+    .price-strip {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
       padding: 0.5em 1em;
-      cursor: pointer;
+      background: #004aad;
     }
 
-    .stock-info {
+    #price-marquee {
+      display: inline-block;
+      animation: marquee-left 25s linear infinite;
+    }
+
+    @keyframes marquee-left {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .price-strip .ticker-item {
+      display: inline-block;
+      margin-right: 2em;
+      color: #ffffff;
+      font-weight: bold;
+    }
+
+    main {
+      width: 95%;
+      max-width: 900px;
+      background: white;
+      margin: 1.5em auto;
+      padding: 1em;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
       text-align: center;
-      margin-bottom: 2em;
+    }
+
+    #stock-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #stock-form input[type="text"],
+    #stock-form button {
+      width: 90%;
+      max-width: 300px;
+      margin: 0.3em 0;
+      padding: 0.5em;
+      font-size: 1em;
     }
 
     .range-buttons {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 0.5em;
-      margin-bottom: 1em;
+      margin-top: 1em;
     }
 
-    .news-section {
+    .range-buttons button {
+      margin: 0.2em;
+      padding: 0.4em 0.8em;
+      font-size: 0.85em;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      background: #f7f9fc;
+      border-radius: 4px;
+    }
+
+    .range-buttons button.active {
+      background: #004aad;
+      color: white;
+      border-color: #003080;
+    }
+
+    #stock-info {
+      margin-top: 1.5em;
+      font-size: 1.1em;
+    }
+
+    #price-change {
+      font-weight: bold;
+      font-size: 1.3em;
+    }
+
+    .positive {
+      color: green;
+    }
+
+    .negative {
+      color: red;
+    }
+
+    #chart-container {
       margin-top: 2em;
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+    }
+
+    #news-section {
+      margin-top: 3em;
+      text-align: left;
+    }
+
+    #news-section h2 {
+      margin-bottom: 0.5em;
+      text-align: center;
     }
 
     .news-article {
-      border-bottom: 1px solid #ccc;
-      padding: 1em 0;
+      margin-bottom: 1.2em;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 1em;
     }
 
-    .dark-mode .news-article {
-      border-color: #555;
+    .news-article a {
+      color: #004aad;
+      font-weight: bold;
+      text-decoration: none;
     }
 
-    .arrow-bounce {
-      font-size: 1.8em;
-      margin-top: 0.3em;
-      animation: bounce 1.2s infinite ease-in-out;
+    .news-source {
+      font-size: 0.85em;
+      color: #666;
     }
+    /* DARK MODE STYLES */
+body.dark-mode {
+  background-color: #121212 !important;
+  color: #e0e0e0 !important;
+}
 
-    @keyframes bounce {
-      0%, 100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(6px);
-      }
-    }
+body.dark-mode .price-strip {
+  background: #222a3a !important;
+}
 
-    body.dark-mode #searchPrompt {
-      color: #aaa;
-    }
+body.dark-mode .page-title {
+  color: #a0c8ff !important;
+}
+
+body.dark-mode main {
+  background: #1e1e1e !important;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1) !important;
+  color: #ccc !important;
+}
+
+body.dark-mode button {
+  background: #2c3e50 !important;
+  color: #cfcfcf !important;
+  border-color: #4a6fa5 !important;
+}
+
+body.dark-mode button.active {
+  background: #4a90e2 !important;
+  color: white !important;
+  border-color: #357ABD !important;
+}
+
+body.dark-mode #stock-info p,
+body.dark-mode #stock-info h2,
+body.dark-mode #news-section,
+body.dark-mode .news-article,
+body.dark-mode .news-source {
+  color: #ddd !important;
+}
+
+body.dark-mode .positive {
+  color: #7ed57e !important;
+}
+
+body.dark-mode .negative {
+  color: #f56969 !important;
+}
+
+body.dark-mode a {
+  color: #7ec0ff !important;
+}
   </style>
 </head>
-
 <body>
-  <div class="container">
-    <div class="page-title">📈 Stock Tracker</div>
 
-    <!-- Dark Mode Toggle -->
-    <div style="text-align: center; margin: 1em 0;">
-      <label for="darkModeToggle" style="cursor: pointer; user-select: none;">
-        🌙 Dark Mode
-        <input type="checkbox" id="darkModeToggle" style="margin-left: 0.5em;">
-      </label>
-    </div>
-
-    <div class="form-group">
-      <form id="stockForm">
-        <input type="text" id="symbolInput" placeholder="Enter Stock Symbol (e.g. AAPL)">
-        <button type="submit">Search</button>
-      </form>
-    </div>
-
-    <div class="stock-info" id="stock-info"></div>
-
-    <div class="range-buttons" id="range-buttons"></div>
-
-    <!-- Animated Callout -->
-    <div id="searchPrompt" style="margin-top: 1.2em; text-align: center;">
-      <div style="color: #555; font-size: 1em;">Search a stock ticker above to begin</div>
-      <div class="arrow-bounce">⬇️</div>
-    </div>
-
-    <div id="chart"></div>
-
-    <div class="news-section" id="news"></div>
+  <div class="page-title">📈 Stock Tracker</div>
+  <!-- Dark Mode Toggle -->
+  <div style="text-align: center; margin: 1em 0;">
+    <label for="darkModeToggle" style="cursor: pointer; user-select: none;">
+      🌙 Dark Mode
+      <input type="checkbox" id="darkModeToggle" style="margin-left: 0.5em;">
+    </label>
   </div>
 
+  <div class="price-strip">
+    <div id="price-marquee">
+      <span class="ticker-item">AAPL: $192.30</span>
+      <span class="ticker-item">NVDA: $478.55</span>
+      <span class="ticker-item">MSFT: $331.90</span>
+      <span class="ticker-item">META: $374.25</span>
+      <span class="ticker-item">TSLA: $253.40</span>
+      <span class="ticker-item">AMZN: $134.65</span>
+      <span class="ticker-item">AMD: $114.20</span>
+      <span class="ticker-item">GOOG: $141.23</span>
+      <span class="ticker-item">PLTR: $21.87</span>
+    </div>
+  </div>
+
+  <main>
+    <form id="stock-form">
+      <input type="text" id="symbol-input" placeholder="Enter ticker ONLY" required />
+      <button type="submit">Get Stock Data</button>
+    </form>
+
+    <div class="range-buttons" id="range-buttons">
+      <button data-range="1d">1 Day</button>
+      <button data-range="3d">3 Days</button>
+      <button data-range="1wk">1 Week</button>
+      <button data-range="3wk">3 Weeks</button>
+      <button data-range="1mo" class="active">1 Month</button>
+      <button data-range="3mo">3 Months</button>
+      <button data-range="6mo">6 Months</button>
+      <button data-range="1y">1 Year</button>
+      <button data-range="3y">3 Years</button>
+      <button data-range="5y">5 Years</button>
+      <button data-range="max">Max</button>
+    </div>
+
+    <div id="stock-info"></div>
+
+    <div id="chart-container">
+      <canvas id="stock-chart" width="800" height="400"></canvas>
+    </div>
+
+    <section id="news-section">
+      <h2>Latest Finance News</h2>
+      <div id="news-list"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const form = document.getElementById('stockForm');
-    const symbolInput = document.getElementById('symbolInput');
-    const darkModeToggle = document.getElementById('darkModeToggle');
+    const form = document.getElementById('stock-form');
+    const symbolInput = document.getElementById('symbol-input');
+    const stockInfoDiv = document.getElementById('stock-info');
+    const newsList = document.getElementById('news-list');
+    const rangeButtons = document.querySelectorAll('.range-buttons button');
+    let selectedRange = '1mo';
+    let chart;
 
-    // Handle dark mode toggle
-    darkModeToggle.addEventListener('change', function () {
-      document.body.classList.toggle('dark-mode', this.checked);
-      localStorage.setItem('darkMode', this.checked);
+    function setActiveRangeButton(range) {
+      rangeButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.range === range);
+      });
+    }
+
+    rangeButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        selectedRange = button.dataset.range;
+        setActiveRangeButton(selectedRange);
+        if (symbolInput.value.trim() !== '') {
+          fetchStockData(symbolInput.value.trim(), selectedRange);
+        }
+      });
     });
 
-    // Load dark mode preference
-    window.addEventListener('DOMContentLoaded', () => {
-      const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-      darkModeToggle.checked = savedDarkMode;
-      document.body.classList.toggle('dark-mode', savedDarkMode);
-    });
+    function formatNumber(num) {
+      return num.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function updateStockInfo(data) {
+      if (data.error) {
+        stockInfoDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+        return;
+      }
+
+      const changeClass = data.absolute_change >= 0 ? 'positive' : 'negative';
+      stockInfoDiv.innerHTML = `
+        <h2>${data.name} (${data.symbol})</h2>
+        <p>Current Price: $${formatNumber(data.current_price)}</p>
+        <p>Day High: $${formatNumber(data.day_high)} | Day Low: $${formatNumber(data.day_low)}</p>
+        <p>52 Week High: $${formatNumber(data.high_52week)} | 52 Week Low: $${formatNumber(data.low_52week)}</p>
+        <p id="price-change" class="${changeClass}">Change: ${formatNumber(data.absolute_change)} (${formatNumber(data.percent_change)}%)</p>
+      `;
+    }
+
+    function renderChart(dates, prices) {
+      const ctx = document.getElementById('stock-chart').getContext('2d');
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: 'Close Price',
+            data: prices,
+            borderColor: '#004aad',
+            backgroundColor: 'rgba(0, 74, 173, 0.3)',
+            fill: true,
+            tension: 0.2,
+            pointRadius: 0,
+            borderWidth: 2,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { title: { display: true, text: 'Date' } },
+            y: { title: { display: true, text: 'Price (USD)' }, beginAtZero: false }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    async function fetchStockData(symbol, range) {
+      stockInfoDiv.innerHTML = `<p>Loading data for ${symbol}...</p>`;
+      try {
+        const response = await fetch('/stock-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ symbol, range })
+        });
+        const data = await response.json();
+        updateStockInfo(data);
+        if (!data.error) {
+          renderChart(data.dates, data.prices);
+        } else {
+          if (chart) chart.destroy();
+        }
+      } catch {
+        stockInfoDiv.innerHTML = `<p style="color:red;">Error fetching data.</p>`;
+        if (chart) chart.destroy();
+      }
+    }
+
+    async function loadNews() {
+      try {
+        const response = await fetch('/news');
+        const articles = await response.json();
+        newsList.innerHTML = articles.map(a => `
+          <div class="news-article">
+            <a href="${a.url}" target="_blank" rel="noopener">${a.title}</a>
+            <div class="news-source">${a.source} | ${new Date(a.publishedAt).toLocaleString()}</div>
+            <p>${a.description || ''}</p>
+          </div>
+        `).join('');
+      } catch {
+        newsList.innerHTML = '<p>News unavailable</p>';
+      }
+    }
 
     form.addEventListener('submit', e => {
       e.preventDefault();
       const symbol = symbolInput.value.trim();
       if (symbol) {
-        fetchStockData(symbol);
-        document.getElementById('searchPrompt').style.display = 'none';
+        fetchStockData(symbol, selectedRange);
       }
     });
 
-    function fetchStockData(symbol) {
-      // Example fetch (replace with your actual Flask route)
-      fetch(`/stock/${symbol}`)
-        .then(response => response.json())
-        .then(data => {
-          document.getElementById('stock-info').textContent = `${symbol.toUpperCase()}: $${data.price}`;
-          // Optionally load chart and news here
-        })
-        .catch(error => console.error('Error fetching stock data:', error));
-    }
+    loadNews();
+    // Dark mode toggle logic
+const darkToggle = document.getElementById('darkModeToggle');
+
+darkToggle.addEventListener('change', () => {
+  document.body.classList.toggle('dark-mode', darkToggle.checked);
+  // Save preference in localStorage so it persists on reload
+  localStorage.setItem('darkMode', darkToggle.checked);
+});
+
+// On page load, read saved preference and apply it
+if (localStorage.getItem('darkMode') === 'true') {
+  darkToggle.checked = true;
+  document.body.classList.add('dark-mode');
+}
   </script>
 </body>
 </html>
