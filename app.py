@@ -81,8 +81,8 @@ def stock_data():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-@app.route('/tickers')
-def ticker_prices():
+@app.route('/api/live-ticker')
+def live_ticker():
     symbols = ["AAPL", "NVDA", "MSFT", "META", "TSLA", "AMZN", "AMD", "GOOG", "PLTR"]
     results = []
 
