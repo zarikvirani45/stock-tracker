@@ -3,302 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stock Dashboard</title>
+  <title>Stock Market Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f5f5f5;
-    }
-
-    header {
-      /* background-color removed to remove black background */
-      color: #222; /* changed text color to dark so it's visible */
-      padding: 1rem;
-      text-align: center;
-    }
-
-    .tickerBar {
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      width: 100%;
-      max-width: 900px;
-      height: 40px;
-      background-color: #000000; /* full black background on ticker bar */
-      border-radius: 0;
-      color: #eee;
-      font-weight: bold;
-      font-size: 1.1rem;
+    .ticker-container {
       overflow: hidden;
-      user-select: none;
-      border-bottom: 2px solid #444;
-      margin: 0 auto;
+      background-color: black;
+    }
+    .ticker {
+      display: inline-block;
       white-space: nowrap;
+      animation: scroll-left 40s linear infinite;
     }
-
-    .tickerInner {
-      display: inline-block;
-      padding-left: 100%;
-      animation: scroll 25s linear infinite;
-    }
-
-    @keyframes scroll {
-      0% { transform: translateX(0); }
+    @keyframes scroll-left {
+      0% { transform: translateX(100%); }
       100% { transform: translateX(-100%); }
-    }
-
-    .tickerItem {
-      display: inline-block;
-      margin: 0 1.5rem;
-    }
-
-    #searchContainer {
-      max-width: 900px;
-      margin: 1rem auto;
-      display: flex;
-      gap: 10px;
-      padding: 0 1rem;
-    }
-
-    #searchBox {
-      flex-grow: 1;
-      padding: 0.5rem;
-      font-size: 1rem;
-    }
-
-    #searchBtn {
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-
-    #chart-container {
-      height: 400px;
-      max-width: 900px;
-      margin: 2rem auto;
-    }
-
-    .priceInfo {
-      text-align: center;
-      font-size: 1.1rem;
-      padding: 1rem;
-    }
-
-    #newsSection {
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
-
-    .newsItem {
-      background-color: #fff;
-      border-radius: 6px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    .newsItem h4 {
-      margin: 0;
-    }
-
-    @media (max-width: 600px) {
-      header h1 {
-        font-size: 1.4rem;
-      }
-
-      #searchBox {
-        max-width: 100%;
-        flex-grow: 1;
-        font-size: 0.9rem;
-      }
-
-      #searchBtn {
-        font-size: 0.9rem;
-        padding: 8px 14px;
-      }
-
-      .tickerBar {
-        font-size: 0.9rem;
-        height: 35px;
-        padding-left: 10px;
-        padding-right: 10px;
-      }
-
-      .tickerItem {
-        margin: 0 1rem;
-      }
-
-      #chart-container {
-        height: 280px;
-      }
-
-      .priceInfo {
-        font-size: 0.95rem;
-      }
     }
   </style>
 </head>
-<body>
-  <header>
-    <h1>Stock Dashboard</h1>
-  </header>
+<body class="bg-white text-black">
+  <div class="w-full py-4 text-center text-3xl font-bold">Stock Market</div>
+  <div class="ticker-container py-2">
+    <div id="ticker" class="ticker text-white text-sm font-mono"></div>
+  </div>
 
-  <div class="tickerBar">
-    <div class="tickerInner" id="ticker">
-      <!-- Trending tickers will appear here -->
+  <div class="max-w-xl mx-auto px-4 mt-8">
+    <input id="symbolInput" type="text" placeholder="Enter stock, ETF, or mutual fund name/symbol" class="border p-2 w-full rounded mb-2">
+    <button onclick="getStockData()" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Get Data</button>
+
+    <div id="stockInfo" class="mt-6 hidden">
+      <h2 class="text-xl font-bold mb-2" id="stockName"></h2>
+      <p><strong>Symbol:</strong> <span id="stockSymbol"></span></p>
+      <p><strong>Current Price:</strong> $<span id="stockPrice"></span></p>
+      <p><strong>Day High:</strong> $<span id="dayHigh"></span></p>
+      <p><strong>Day Low:</strong> $<span id="dayLow"></span></p>
+      <p><strong>52 Week High:</strong> $<span id="high52"></span></p>
+      <p><strong>52 Week Low:</strong> $<span id="low52"></span></p>
+      <p><strong>Change:</strong> <span id="priceChange"></span> (<span id="percentChange"></span>)</p>
     </div>
   </div>
 
-  <div id="searchContainer">
-    <input type="text" id="searchBox" placeholder="Enter stock symbol or company name" />
-    <button id="searchBtn">Search</button>
-  </div>
-
-  <div id="chart-container">
-    <canvas id="stockChart"></canvas>
-  </div>
-
-  <div class="priceInfo" id="priceDetails"></div>
-
-  <div id="newsSection"></div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    let stockChart;
+    async function fetchTrending() {
+      const res = await fetch('/trending');
+      const data = await res.json();
+      const tickerDiv = document.getElementById('ticker');
+      tickerDiv.innerHTML = data.map(item => `<span class="mx-4">${item.symbol}: $${item.price.toFixed(2)}</span>`).join('');
+    }
 
-    document.getElementById('searchBtn').addEventListener('click', () => {
-      const input = document.getElementById('searchBox').value.trim();
+    async function getStockData() {
+      const input = document.getElementById('symbolInput').value.trim();
       if (!input) return;
 
-      fetch('/stock-data', {
+      const res = await fetch('/stock-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbol: input, range: '1mo' })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if(data.error) {
-            alert(data.error);
-            return;
-          }
-          updatePrice(data.current_price, data.percent_change);
-          updateChart(data.dates, data.prices, data.name, data.symbol, data.percent_change);
-          fetchNews();
-        })
-        .catch(err => console.error(err));
-    });
-
-    function updatePrice(price, changePercent) {
-      const el = document.getElementById('priceDetails');
-      const isPositive = changePercent >= 0;
-      const color = isPositive ? 'green' : 'red';
-      const formattedPrice = price.toFixed(2);
-      const formattedChange = changePercent.toFixed(2);
-
-      el.innerHTML = `Price: <span style="color:${color};">$${formattedPrice}</span> <span style="color:${color};">(${formattedChange}%)</span>`;
-    }
-
-    function updateChart(labels, prices, name, symbol, changePercent) {
-      const ctx = document.getElementById('stockChart').getContext('2d');
-      if (stockChart) stockChart.destroy();
-      const isPositive = changePercent >= 0;
-      const borderColor = isPositive ? 'green' : 'red';
-
-      stockChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: `${name} (${symbol})`,
-            data: prices,
-            borderColor: borderColor,
-            backgroundColor: 'transparent',
-            tension: 0.2,
-            pointRadius: 0,
-            borderWidth: 2,
-            fill: false,
-            hoverRadius: 4
-          }]
-        },
-        options: {
-          animation: { duration: 500 },
-          scales: {
-            x: {
-              ticks: { maxTicksLimit: 10, maxRotation: 0 },
-              grid: { display: false }
-            },
-            y: {
-              beginAtZero: false,
-              grid: { color: '#ddd' }
-            }
-          },
-          plugins: {
-            legend: { display: true, position: 'top' }
-          },
-          responsive: true,
-          maintainAspectRatio: false
-        }
+        body: JSON.stringify({ symbol: input })
       });
-    }
 
-    async function fetchTrending() {
-      try {
-        const res = await fetch('/trending');
-        const data = await res.json();
-        const ticker = document.getElementById('ticker');
-        if (!data.length) {
-          ticker.textContent = "No trending stocks available.";
-          return;
-        }
-        // Build ticker items and duplicate for continuous scroll
-        const items = data.map(t => `<span class="tickerItem">${t.symbol}: $${t.price.toFixed(2)}</span>`).join('');
-        ticker.innerHTML = items + items;
-      } catch {
-        document.getElementById('ticker').textContent = "Failed to load trending stocks.";
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+        return;
       }
+
+      document.getElementById('stockInfo').classList.remove('hidden');
+      document.getElementById('stockName').textContent = data.name;
+      document.getElementById('stockSymbol').textContent = data.symbol;
+      document.getElementById('stockPrice').textContent = parseFloat(data.current_price).toFixed(2);
+      document.getElementById('dayHigh').textContent = parseFloat(data.day_high).toFixed(2);
+      document.getElementById('dayLow').textContent = parseFloat(data.day_low).toFixed(2);
+      document.getElementById('high52').textContent = parseFloat(data.high_52week).toFixed(2);
+      document.getElementById('low52').textContent = parseFloat(data.low_52week).toFixed(2);
+
+      const abs = parseFloat(data.absolute_change).toFixed(2);
+      const perc = parseFloat(data.percent_change).toFixed(2);
+
+      const color = abs >= 0 ? 'text-green-600' : 'text-red-600';
+      document.getElementById('priceChange').textContent = (abs >= 0 ? '+' : '') + abs;
+      document.getElementById('priceChange').className = color;
+      document.getElementById('percentChange').textContent = (perc >= 0 ? '+' : '') + perc + '%';
+      document.getElementById('percentChange').className = color;
+      document.getElementById('stockPrice').className = color;
     }
 
-    async function fetchNews() {
-      try {
-        const res = await fetch('/news');
-        const news = await res.json();
-        const container = document.getElementById('newsSection');
-        container.innerHTML = '<h2>Latest News</h2>';
-        if (!news.length) {
-          container.innerHTML += '<p>No news available at this time.</p>';
-          return;
-        }
-
-        news.forEach(article => {
-          const publishedAt = new Date(article.publishedAt);
-          const diffMins = Math.floor((new Date() - publishedAt) / 60000);
-          container.innerHTML += `
-            <article class="newsItem">
-              <h4><a href="${article.url}" target="_blank" rel="noopener noreferrer">${article.title}</a></h4>
-              <p><em>${article.source} - ${diffMins} mins ago</em></p>
-              <p>${article.description}</p>
-            </article>
-          `;
-        });
-      } catch {
-        document.getElementById('newsSection').innerHTML = '<p>Failed to load news.</p>';
-      }
-    }
-
-    // Load trending tickers and initial news on page load
     fetchTrending();
-    fetchNews();
   </script>
 </body>
 </html>
