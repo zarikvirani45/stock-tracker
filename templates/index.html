@@ -207,36 +207,21 @@ body.dark-mode a {
   </style>
 </head>
 <body>
-
   <div class="page-title">📈 Stock Tracker</div>
-  <!-- Dark Mode Toggle -->
   <div style="text-align: center; margin: 1em 0;">
     <label for="darkModeToggle" style="cursor: pointer; user-select: none;">
       🌙 Dark Mode
       <input type="checkbox" id="darkModeToggle" style="margin-left: 0.5em;">
     </label>
   </div>
-
   <div class="price-strip">
-    <div id="price-marquee">
-      <span class="ticker-item">AAPL: $192.30</span>
-      <span class="ticker-item">NVDA: $478.55</span>
-      <span class="ticker-item">MSFT: $331.90</span>
-      <span class="ticker-item">META: $374.25</span>
-      <span class="ticker-item">TSLA: $253.40</span>
-      <span class="ticker-item">AMZN: $134.65</span>
-      <span class="ticker-item">AMD: $114.20</span>
-      <span class="ticker-item">GOOG: $141.23</span>
-      <span class="ticker-item">PLTR: $21.87</span>
-    </div>
+    <div id="price-marquee"></div>
   </div>
-
   <main>
     <form id="stock-form">
       <input type="text" id="symbol-input" placeholder="Enter ticker ONLY" required />
       <button type="submit">Get Stock Data</button>
     </form>
-
     <div class="range-buttons" id="range-buttons">
       <button data-range="1d">1 Day</button>
       <button data-range="3d">3 Days</button>
@@ -250,19 +235,15 @@ body.dark-mode a {
       <button data-range="5y">5 Years</button>
       <button data-range="max">Max</button>
     </div>
-
     <div id="stock-info"></div>
-
     <div id="chart-container">
       <canvas id="stock-chart" width="800" height="400"></canvas>
     </div>
-
     <section id="news-section">
       <h2>Latest Finance News</h2>
       <div id="news-list"></div>
     </section>
   </main>
-
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const form = document.getElementById('stock-form');
@@ -272,6 +253,35 @@ body.dark-mode a {
     const rangeButtons = document.querySelectorAll('.range-buttons button');
     let selectedRange = '1mo';
     let chart;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const darkToggle = document.getElementById('darkModeToggle');
+      if (localStorage.getItem('darkMode') === 'true') {
+        darkToggle.checked = true;
+        document.body.classList.add('dark-mode');
+      }
+      darkToggle.addEventListener('change', () => {
+        document.body.classList.toggle('dark-mode', darkToggle.checked);
+        localStorage.setItem('darkMode', darkToggle.checked);
+      });
+    });
+
+    async function fetchTickerPrices() {
+      try {
+        const response = await fetch('/api/live-ticker');
+        const data = await response.json();
+        const marquee = document.getElementById('price-marquee');
+        if (marquee) {
+          marquee.innerHTML = data.map(item => `
+            <span class="ticker-item">${item.symbol}: $${item.price}</span>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Error fetching ticker prices:', err);
+      }
+    }
+    setInterval(fetchTickerPrices, 3000);
+    window.addEventListener('DOMContentLoaded', fetchTickerPrices);
 
     function setActiveRangeButton(range) {
       rangeButtons.forEach(btn => {
@@ -298,10 +308,9 @@ body.dark-mode a {
 
     function updateStockInfo(data) {
       if (data.error) {
-        stockInfoDiv.innerHTML = <p style="color:red;">Error: ${data.error}</p>;
+        stockInfoDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
         return;
       }
-
       const changeClass = data.absolute_change >= 0 ? 'positive' : 'negative';
       stockInfoDiv.innerHTML = `
         <h2>${data.name} (${data.symbol})</h2>
@@ -315,7 +324,6 @@ body.dark-mode a {
     function renderChart(dates, prices) {
       const ctx = document.getElementById('stock-chart').getContext('2d');
       if (chart) chart.destroy();
-
       chart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -344,7 +352,7 @@ body.dark-mode a {
     }
 
     async function fetchStockData(symbol, range) {
-      stockInfoDiv.innerHTML = <p>Loading data for ${symbol}...</p>;
+      stockInfoDiv.innerHTML = `<p>Loading data for ${symbol}...</p>`;
       try {
         const response = await fetch('/stock-data', {
           method: 'POST',
@@ -359,7 +367,7 @@ body.dark-mode a {
           if (chart) chart.destroy();
         }
       } catch {
-        stockInfoDiv.innerHTML = <p style="color:red;">Error fetching data.</p>;
+        stockInfoDiv.innerHTML = '<p style="color:red;">Error fetching data.</p>';
         if (chart) chart.destroy();
       }
     }
@@ -368,13 +376,13 @@ body.dark-mode a {
       try {
         const response = await fetch('/news');
         const articles = await response.json();
-        newsList.innerHTML = articles.map(a => 
+        newsList.innerHTML = articles.map(a => `
           <div class="news-article">
             <a href="${a.url}" target="_blank" rel="noopener">${a.title}</a>
             <div class="news-source">${a.source} | ${new Date(a.publishedAt).toLocaleString()}</div>
             <p>${a.description || ''}</p>
           </div>
-        ).join('');
+        `).join('');
       } catch {
         newsList.innerHTML = '<p>News unavailable</p>';
       }
@@ -389,25 +397,6 @@ body.dark-mode a {
     });
 
     loadNews();
-    // Dark mode toggle logic
-const darkToggle = document.getElementById('darkModeToggle');
-
-document.addEventListener('DOMContentLoaded', () => {
-  const darkToggle = document.getElementById('darkModeToggle');
-
-  // On load, apply saved theme
-  if (localStorage.getItem('darkMode') === 'true') {
-    darkToggle.checked = true;
-    document.body.classList.add('dark-mode');
-  }
-
-  // When toggled
-  darkToggle.addEventListener('change', () => {
-    document.body.classList.toggle('dark-mode', darkToggle.checked);
-    localStorage.setItem('darkMode', darkToggle.checked);
-  });
-});
-
   </script>
 </body>
 </html>
