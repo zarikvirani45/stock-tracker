@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import os
 import requests
 from threading import Timer
+from difflib import get_close_matches
 
 app = Flask(__name__)
 CORS(app)
@@ -49,7 +50,7 @@ def fetch_news():
     except Exception:
         latest_news = get_fallback_news()
 
-    Timer(60.0, fetch_news).start()  # Refresh every 60 seconds
+    Timer(60.0, fetch_news).start()
 
 @app.route('/')
 def home():
@@ -61,25 +62,20 @@ def stock_data():
     user_input = data.get("symbol", "").strip()
     range_code = data.get("range", "1mo")
 
-    def resolve_symbol(input_text):
+    def resolve_symbol(user_input):
         try:
-            ticker_guess = yf.Ticker(input_text)
-            info = ticker_guess.info
-            if info.get("symbol"):
-                return info["symbol"].upper(), info
-        except:
-            pass
-
-        try:
-            search_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={input_text}"
+            search_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={user_input}"
             res = requests.get(search_url, timeout=5)
             results = res.json().get("quotes", [])
             if results:
-                top_result = results[0]
-                symbol = top_result.get("symbol")
-                if symbol:
-                    ticker = yf.Ticker(symbol)
-                    return symbol.upper(), ticker.info
+                symbols = [r["symbol"] for r in results if "symbol" in r]
+                names = [r["shortname"] for r in results if "shortname" in r]
+                matches = get_close_matches(user_input.lower(), names + symbols, n=1, cutoff=0.3)
+                if matches:
+                    for r in results:
+                        if r.get("symbol") and (r.get("shortname", "").lower() == matches[0] or r["symbol"].lower() == matches[0]):
+                            ticker = yf.Ticker(r["symbol"])
+                            return r["symbol"].upper(), ticker.info
         except:
             pass
 
@@ -142,7 +138,7 @@ def stock_data():
             "prices": prices,
             "absolute_change": absolute_change,
             "percent_change": percent_change,
-            "positive": bool(percent_change >= 0)
+            "positive": percent_change >= 0
         }
 
         return jsonify(stock_summary)
@@ -228,3 +224,4 @@ if __name__ == '__main__':
     fetch_news()
     port = int(os.environ.get("PORT", 5051))
     app.run(debug=True, host='0.0.0.0', port=port)
+
