@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -271,17 +271,18 @@ body.dark-mode a {
         const response = await fetch('/api/live-ticker');
         const data = await response.json();
         const marquee = document.getElementById('price-marquee');
-        if (marquee) {
-          marquee.innerHTML = data.map(item => `
-            <span class="ticker-item">${item.symbol}: $${item.price}</span>
-          `).join('');
-        }
+        if (!marquee) return;
+
+        marquee.innerHTML = data.map(item => `
+          <span class="ticker-item">${item.symbol}: $${item.price.toFixed(2)}</span>
+        `).join('');
       } catch (err) {
         console.error('Error fetching ticker prices:', err);
       }
     }
+
+    fetchTickerPrices();
     setInterval(fetchTickerPrices, 3000);
-    window.addEventListener('DOMContentLoaded', fetchTickerPrices);
 
     function setActiveRangeButton(range) {
       rangeButtons.forEach(btn => {
