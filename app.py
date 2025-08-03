@@ -64,57 +64,53 @@ def stock_data():
 
     def resolve_symbol(user_input):
         try:
-            # Use Yahoo Finance search API to get list of possible matches
             search_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={user_input}"
             res = requests.get(search_url, timeout=5)
+            if res.status_code != 200:
+                return None
             results = res.json().get("quotes", [])
 
             if not results:
-                return None, None
+                return None
 
-            # Prepare lists for matching
             symbols = [r.get("symbol", "").lower() for r in results]
-            names = [r.get("shortname", "").lower() for r in results if r.get("shortname")]
+            names = [r.get("shortName", "").lower() for r in results if r.get("shortName")]
 
             user_lower = user_input.lower()
 
-            # 1. Check for exact symbol match
+            # Exact symbol match
             for r in results:
                 if r.get("symbol", "").lower() == user_lower:
-                    ticker = yf.Ticker(r["symbol"])
-                    return r["symbol"].upper(), ticker.info
+                    return r["symbol"]
 
-            # 2. Check for exact name match (ignore case)
+            # Exact name match
             for r in results:
-                if r.get("shortname", "").lower() == user_lower:
-                    ticker = yf.Ticker(r["symbol"])
-                    return r["symbol"].upper(), ticker.info
+                if r.get("shortName", "").lower() == user_lower:
+                    return r["symbol"]
 
-            # 3. Fuzzy match user input against symbols and names combined
-            combined_list = symbols + names
-            matches = get_close_matches(user_lower, combined_list, n=1, cutoff=0.3)
+            # Fuzzy match on symbols and names
+            combined = symbols + names
+            matches = get_close_matches(user_lower, combined, n=1, cutoff=0.3)
             if matches:
                 matched = matches[0]
-                # Find the full record that matches this
                 for r in results:
                     sym = r.get("symbol", "").lower()
-                    nm = r.get("shortname", "").lower()
+                    nm = r.get("shortName", "").lower()
                     if matched == sym or matched == nm:
-                        ticker = yf.Ticker(r["symbol"])
-                        return r["symbol"].upper(), ticker.info
+                        return r["symbol"]
 
-            # 4. As fallback, if no matches, return None
-            return None, None
+            return None
         except Exception:
-            return None, None
+            return None
 
-    symbol, info = resolve_symbol(user_input)
+    symbol = resolve_symbol(user_input)
 
-    if not symbol or not info:
+    if not symbol:
         return jsonify({"error": "Invalid company name or stock symbol."})
 
     try:
         ticker = yf.Ticker(symbol)
+        info = ticker.info
 
         current_price = info.get("currentPrice", None) or info.get("regularMarketPrice", None)
         if current_price is None:
