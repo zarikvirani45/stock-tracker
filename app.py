@@ -12,6 +12,26 @@ CORS(app)
 NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "your_newsapi_key_here")
 latest_news = []
 
+def get_fallback_news():
+    return [
+        {
+            "title": "Stock market update: fallback headline",
+            "description": "Unable to load live news. Here's a fallback headline.",
+            "url": "https://www.investopedia.com",
+            "source": "Fallback Source",
+            "publishedAt": datetime.utcnow().isoformat(),
+            "urlToImage": ""
+        },
+        {
+            "title": "Financial update: fallback headline",
+            "description": "This is a fallback news item due to an API issue.",
+            "url": "https://www.marketwatch.com",
+            "source": "Fallback Source",
+            "publishedAt": datetime.utcnow().isoformat(),
+            "urlToImage": ""
+        }
+    ]
+
 def fetch_news():
     global latest_news
     try:
@@ -147,8 +167,6 @@ def stock_data():
 
     except Exception as e:
         return jsonify({"error": str(e)})
-
-# rest of your routes (trending, news, get_fallback_news, etc.) unchanged
 
 if __name__ == '__main__':
     fetch_news()
