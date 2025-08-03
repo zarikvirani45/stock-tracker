@@ -21,7 +21,8 @@ def stock_data():
         ticker = yf.Ticker(symbol)
         info = ticker.info
 
-        current_price = info.get("currentPrice", None)
+        # Try currentPrice, else fallback to regularMarketPrice for ETFs
+        current_price = info.get("currentPrice", None) or info.get("regularMarketPrice", None)
         if current_price is None:
             return jsonify({"error": "Invalid stock symbol or data unavailable."})
 
@@ -84,7 +85,8 @@ def trending():
 
         for symbol in trending_symbols:
             ticker = yf.Ticker(symbol)
-            price = ticker.info.get("currentPrice", None)
+            info = ticker.info
+            price = info.get("currentPrice", None) or info.get("regularMarketPrice", None)
             if price is not None:
                 trending_data.append({"symbol": symbol, "price": round(price, 2)})
 
