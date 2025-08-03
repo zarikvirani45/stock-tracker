@@ -23,7 +23,7 @@ def stock_data():
     try:
         ticker = yf.Ticker(symbol)
         info = ticker.info
-        
+
         current_price = info.get("currentPrice") or info.get("regularMarketPrice")
         if current_price is None:
             return jsonify({"error": "Invalid stock symbol or data unavailable."})
@@ -80,6 +80,28 @@ def stock_data():
 
     except Exception as e:
         return jsonify({"error": str(e)})
+
+@app.route('/tickers')
+def ticker_prices():
+    symbols = ["AAPL", "NVDA", "MSFT", "META", "TSLA", "AMZN", "AMD", "GOOG", "PLTR"]
+    results = []
+
+    try:
+        tickers = yf.Tickers(' '.join(symbols)).tickers
+
+        for symbol in symbols:
+            info = tickers[symbol].info
+            price = info.get("currentPrice") or info.get("regularMarketPrice")
+            if price is not None:
+                results.append({
+                    "symbol": symbol,
+                    "price": round(price, 2)
+                })
+
+        return jsonify(results)
+    
+    except Exception as e:
+        return jsonify({"error": f"Failed to retrieve ticker data: {str(e)}"})
 
 @app.route('/news')
 def get_news():
