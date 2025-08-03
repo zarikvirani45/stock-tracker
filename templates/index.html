@@ -153,13 +153,62 @@ html, body {
       font-size: 0.85em;
       color: #666;
     }
+    /* DARK MODE STYLES */
+body.dark-mode {
+  background-color: #121212 !important;
+  color: #e0e0e0 !important;
+}
+
+body.dark-mode .price-strip {
+  background: #222a3a !important;
+}
+
+body.dark-mode .page-title {
+  color: #a0c8ff !important;
+}
+
+body.dark-mode main {
+  background: #1e1e1e !important;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1) !important;
+  color: #ccc !important;
+}
+
+body.dark-mode button {
+  background: #2c3e50 !important;
+  color: #cfcfcf !important;
+  border-color: #4a6fa5 !important;
+}
+
+body.dark-mode button.active {
+  background: #4a90e2 !important;
+  color: white !important;
+  border-color: #357ABD !important;
+}
+
+body.dark-mode #stock-info p,
+body.dark-mode #stock-info h2,
+body.dark-mode #news-section,
+body.dark-mode .news-article,
+body.dark-mode .news-source {
+  color: #ddd !important;
+}
+
+body.dark-mode .positive {
+  color: #7ed57e !important;
+}
+
+body.dark-mode .negative {
+  color: #f56969 !important;
+}
+
+body.dark-mode a {
+  color: #7ec0ff !important;
+}
   </style>
 </head>
 <body>
 
   <div class="page-title">📈 Stock Tracker</div>
-  <div class="page-title">📈 Stock Tracker</div>
-
   <!-- Dark Mode Toggle -->
   <div style="text-align: center; margin: 1em 0;">
     <label for="darkModeToggle" style="cursor: pointer; user-select: none;">
@@ -340,6 +389,20 @@ html, body {
     });
 
     loadNews();
+    // Dark mode toggle logic
+const darkToggle = document.getElementById('darkModeToggle');
+
+darkToggle.addEventListener('change', () => {
+  document.body.classList.toggle('dark-mode', darkToggle.checked);
+  // Save preference in localStorage so it persists on reload
+  localStorage.setItem('darkMode', darkToggle.checked);
+});
+
+// On page load, read saved preference and apply it
+if (localStorage.getItem('darkMode') === 'true') {
+  darkToggle.checked = true;
+  document.body.classList.add('dark-mode');
+}
   </script>
 </body>
 </html>
