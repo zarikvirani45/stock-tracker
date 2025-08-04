@@ -1,17 +1,72 @@
+from dotenv import load_dotenv
+load_dotenv() # Load environment variables from .env
+import os
+import mysql.connector
+from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import yfinance as yf
 from datetime import datetime, timedelta
 import os
 import requests
+import mysql.connector
 
 app = Flask(__name__)
 CORS(app)
 
+# News API key
 NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "your_newsapi_key_here")
+
+# Database configuration
+db_config = {
+    'host': os.environ.get("DB_HOST", "localhost"),
+    'user': os.environ.get("DB_USER", "root"),
+    'password': os.environ.get("DB_PASSWORD", ""),
+    'database': os.environ.get("DB_NAME", "stock_dashboard")
+}
+
+def get_db_connection():
+    return mysql.connector.connect(**db_config)
+
+def init_db():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS visits (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                ip VARCHAR(100),
+                timestamp DATETIME
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stock_searches (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                symbol VARCHAR(10),
+                search_time DATETIME,
+                ip VARCHAR(100),
+                range_code VARCHAR(10)
+            )
+        """)
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print("Error initializing DB:", e)
+
+init_db()
 
 @app.route('/')
 def home():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO visits (ip, timestamp) VALUES (%s, %s)", (request.remote_addr, datetime.now()))
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print("Error logging visit:", e)
     return render_template('index.html')
 
 @app.route('/stock-data', methods=['POST'])
@@ -21,6 +76,20 @@ def stock_data():
     range_code = data.get("range", "1mo")
 
     try:
+        # Log the search
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO stock_searches (symbol, range_code, search_time, ip) VALUES (%s, %s, %s, %s)",
+                (symbol, range_code, datetime.now(), request.remote_addr)
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print("Error logging search:", e)
+
         ticker = yf.Ticker(symbol)
         info = ticker.info
 
@@ -170,5 +239,6 @@ def get_fallback_news():
     return jsonify(fallback_articles)
 
 if __name__ == '__main__':
+    init_db()  # Ensure DB and table exist before app runs
     port = int(os.environ.get("PORT", 5051))
     app.run(debug=True, host='0.0.0.0', port=port)
