@@ -8,20 +8,28 @@ from flask_cors import CORS
 import yfinance as yf
 from datetime import datetime, timedelta
 import requests
+from urllib.parse import urlparse  # <-- Added for parsing MYSQL_URL
 
 app = Flask(__name__)
 CORS(app)
 
-# News API key
+
 NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "your_newsapi_key_here")
 
+from urllib.parse import urlparse
+
+mysql_url = os.environ.get("MYSQL_URL")
+parsed_url = urlparse(mysql_url) if mysql_url else None
+
 db_config = {
-    'host': os.environ.get("MYSQLHOST"),
-    'user': os.environ.get("MYSQLUSER"),
-    'password': os.environ.get("MYSQLPASSWORD"),
-    'database': os.environ.get("MYSQLDATABASE"),
-    'port': int(os.environ.get("MYSQLPORT", 3306))
+    'host': parsed_url.hostname if parsed_url else os.environ.get("MYSQLHOST"),
+    'user': parsed_url.username if parsed_url else os.environ.get("MYSQLUSER"),
+    'password': parsed_url.password if parsed_url else os.environ.get("MYSQLPASSWORD"),
+    'database': parsed_url.path.lstrip('/') if parsed_url else os.environ.get("MYSQLDATABASE"),
+    'port': parsed_url.port if parsed_url else int(os.environ.get("MYSQLPORT", 3306))
 }
+# -------------------------------------------------------------
+
 def log_user_action(action, symbol=None):
     print(f"[Logging to DB] Action: {action}, Symbol: {symbol}")  
     try:
