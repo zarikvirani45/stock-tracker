@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-load_dotenv() # Load environment variables from .env
+load_dotenv() 
 import os
 import mysql.connector
 from datetime import datetime
@@ -15,16 +15,15 @@ CORS(app)
 # News API key
 NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "your_newsapi_key_here")
 
-# Database configuration
 db_config = {
-    'host': os.environ.get("DB_HOST", "localhost"),
-    'user': os.environ.get("DB_USER", "root"),
-    'password': os.environ.get("DB_PASSWORD", ""),
-    'database': os.environ.get("DB_NAME", "stock_dashboard"),
-    'port': int(os.environ.get("DB_PORT", 3306))
+    'host': os.environ.get("MYSQLHOST"),
+    'user': os.environ.get("MYSQLUSER"),
+    'password': os.environ.get("MYSQLPASSWORD"),
+    'database': os.environ.get("MYSQLDATABASE"),
+    'port': int(os.environ.get("MYSQLPORT", 3306))
 }
 def log_user_action(action, symbol=None):
-    print(f"[Logging to DB] Action: {action}, Symbol: {symbol}")  # Debug output
+    print(f"[Logging to DB] Action: {action}, Symbol: {symbol}")  
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
@@ -78,7 +77,7 @@ init_db()
 
 @app.route('/')
 def home():
-    # Log the visit
+    
     log_user_action("page load")
     try:
         conn = get_db_connection()
@@ -98,7 +97,7 @@ def stock_data():
     log_user_action("search_stock", symbol)
     range_code = data.get("range", "1mo")
     try:
-        # Log the search
+        
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -261,6 +260,6 @@ def get_fallback_news():
     return jsonify(fallback_articles)
 
 if __name__ == '__main__':
-    init_db()  # Ensure DB and table exist before app runs
+    init_db() 
     port = int(os.environ.get("PORT", 5051))
     app.run(debug=True, host='0.0.0.0', port=port)

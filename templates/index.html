@@ -345,12 +345,11 @@ body.dark-mode a {
         localStorage.setItem('darkMode', darkToggle.checked);
       });
 
-      // Popular Stocks button listeners inside DOMContentLoaded
       document.querySelectorAll('.popular-stock-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const symbol = btn.getAttribute('data-symbol');
-          symbolInput.value = symbol;               // Update input box
-          fetchStockData(symbol, selectedRange);   // Fetch stock data & update chart
+          symbolInput.value = symbol;               
+          fetchStockData(symbol, selectedRange);   
         });
       });
     });
@@ -378,13 +377,13 @@ body.dark-mode a {
           tickerContents[0].innerHTML = fullTickerHtml;
           tickerContents[1].innerHTML = fullTickerHtml;  // duplicate for smooth looping
 
-          // Measure width of one ticker-content element (in pixels)
+         
           const tickerWidth = tickerContents[0].offsetWidth;
 
           // Remove any previous animation
           marquee.style.animation = 'none';
 
-          // Define animation duration based on speed (pixels per second)
+          
           const speedPxPerSec = 150; // approx same speed as before, adjust if needed
           const duration = tickerWidth / speedPxPerSec; // seconds
 
