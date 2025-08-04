@@ -2,23 +2,18 @@ from dotenv import load_dotenv
 load_dotenv() 
 import os
 import mysql.connector
-from datetime import datetime
+from datetime import datetime, timedelta, time
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import yfinance as yf
-from datetime import datetime, timedelta
 import requests
 from urllib.parse import urlparse  # <-- Added for parsing MYSQL_URL
 import pytz
-from datetime import time
 
 app = Flask(__name__)
 CORS(app)
 
-
 NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "your_newsapi_key_here")
-
-from urllib.parse import urlparse
 
 mysql_url = os.environ.get("MYSQL_URL")
 parsed_url = urlparse(mysql_url) if mysql_url else None
@@ -54,6 +49,7 @@ def log_user_action(action, symbol=None):
         conn.close()
     except Exception as e:
         print(f"[DB Logging Error] {e}")
+
 def get_db_connection():
     return mysql.connector.connect(**db_config)
 
@@ -87,7 +83,6 @@ init_db()
 
 @app.route('/')
 def home():
-    
     log_user_action("page load")
     try:
         conn = get_db_connection()
@@ -107,7 +102,6 @@ def stock_data():
     log_user_action("search_stock", symbol)
     range_code = data.get("range", "1mo")
     try:
-        
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -166,7 +160,11 @@ def stock_data():
                 # Monday during market hours, fetch intraday 1d live data (5 min interval)
                 hist = ticker.history(period="1d", interval="5m")
                 if hist.empty:
-                    return jsonify({"error": "No intraday data available for today."})
+                    # fallback to last Friday's data if intraday empty
+                    hist = ticker.history(period="5d")
+                    hist = hist[hist.index.weekday == 4]
+                    if hist.empty:
+                        return jsonify({"error": "No Friday data found in last 5 days."})
             else:
                 start_date = end_date - range_map["1d"]
                 hist = ticker.history(start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
