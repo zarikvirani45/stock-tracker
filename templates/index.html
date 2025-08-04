@@ -37,7 +37,9 @@ html, body {
       display: flex;
       white-space: nowrap;
       will-change: transform;
-      animation: marquee-scroll 10s linear infinite;
+      /* animation removed here, will be set by JS */
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
     }
 
     #price-marquee > .ticker-content {
@@ -64,7 +66,7 @@ html, body {
         transform: translateX(0);
       }
       100% {
-        transform: translateX(-50%);
+        transform: translateX(var(--marquee-translate-x, -50%));
       }
     }
 
@@ -365,7 +367,7 @@ body.dark-mode a {
           <span class="ticker-item">${item.symbol}: $${item.price.toFixed(2)}</span>
         `).join('');
 
-        // Add spacer elements (4 empty spaces after tickers)
+        // Spacer element for spacing between loops (4 ticker widths)
         const spacerHtml = `<span class="ticker-spacer"></span>`;
 
         // Full content with spacer appended
@@ -375,6 +377,22 @@ body.dark-mode a {
         if (tickerContents.length > 1) {
           tickerContents[0].innerHTML = fullTickerHtml;
           tickerContents[1].innerHTML = fullTickerHtml;  // duplicate for smooth looping
+
+          // Measure width of one ticker-content element (in pixels)
+          const tickerWidth = tickerContents[0].offsetWidth;
+
+          // Remove any previous animation
+          marquee.style.animation = 'none';
+
+          // Define animation duration based on speed (pixels per second)
+          const speedPxPerSec = 150; // approx same speed as before, adjust if needed
+          const duration = tickerWidth / speedPxPerSec; // seconds
+
+          // Set CSS variable for translateX amount (negative of ticker width in px)
+          marquee.style.setProperty('--marquee-translate-x', `-${tickerWidth}px`);
+
+          // Apply animation with dynamic duration and keyframe using CSS variable
+          marquee.style.animation = `marquee-scroll ${duration}s linear infinite`;
         }
       } catch (err) {
         console.error('Error fetching ticker prices:', err);
