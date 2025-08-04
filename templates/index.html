@@ -24,7 +24,7 @@ html, body {
       text-align: center;
     }
 
-    /* Updated marquee styles for continuous scrolling without repeat */
+    /* Smooth continuous marquee */
     .price-strip {
       width: 100%;
       overflow: hidden;
@@ -36,8 +36,8 @@ html, body {
     #price-marquee {
       display: flex;
       white-space: nowrap;
-      animation: marquee-left 25s linear infinite;
       will-change: transform;
+      animation: marquee-scroll 15s linear infinite;
     }
 
     #price-marquee > .ticker-content {
@@ -49,14 +49,15 @@ html, body {
       margin-right: 2em;
       color: #ffffff;
       font-weight: bold;
+      white-space: nowrap;
     }
 
-    @keyframes marquee-left {
+    @keyframes marquee-scroll {
       0% {
         transform: translateX(0);
       }
       100% {
-        transform: translateX(-100%);
+        transform: translateX(-50%);
       }
     }
 
@@ -235,7 +236,7 @@ body.dark-mode a {
   <div class="price-strip">
     <div id="price-marquee">
       <div class="ticker-content"></div>
-      <div class="ticker-content"></div> <!-- Empty for smooth scroll -->
+      <div class="ticker-content"></div>
     </div>
   </div>
   <main>
@@ -357,9 +358,9 @@ body.dark-mode a {
         `).join('');
 
         const tickerContents = marquee.querySelectorAll('.ticker-content');
-        if (tickerContents.length > 0) {
-          tickerContents[0].innerHTML = tickerHtml;  // Put ticker items only once
-          if (tickerContents[1]) tickerContents[1].innerHTML = ''; // Empty for smooth scroll
+        if (tickerContents.length > 1) {
+          tickerContents[0].innerHTML = tickerHtml;
+          tickerContents[1].innerHTML = tickerHtml;  // duplicate for smooth looping
         }
       } catch (err) {
         console.error('Error fetching ticker prices:', err);
