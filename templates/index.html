@@ -334,6 +334,10 @@ body.dark-mode a {
     let selectedRange = '1mo';
     let chart;
 
+    // NEW: Track current symbol & range globally
+    let currentSymbol = '';
+    let currentRange = '1mo';
+
     document.addEventListener('DOMContentLoaded', () => {
       const darkToggle = document.getElementById('darkModeToggle');
       if (localStorage.getItem('darkMode') === 'true') {
@@ -345,13 +349,18 @@ body.dark-mode a {
         localStorage.setItem('darkMode', darkToggle.checked);
       });
 
+      // Popular stock buttons click
       document.querySelectorAll('.popular-stock-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const symbol = btn.getAttribute('data-symbol');
-          symbolInput.value = symbol;               
-          fetchStockData(symbol, selectedRange);   
+          symbolInput.value = symbol;
+          currentSymbol = symbol;       // update global symbol
+          fetchStockData(currentSymbol, currentRange);
         });
       });
+
+      // Range buttons active state
+      setActiveRangeButton(currentRange);
     });
 
     async function fetchTickerPrices() {
@@ -377,13 +386,11 @@ body.dark-mode a {
           tickerContents[0].innerHTML = fullTickerHtml;
           tickerContents[1].innerHTML = fullTickerHtml;  // duplicate for smooth looping
 
-         
           const tickerWidth = tickerContents[0].offsetWidth;
 
           // Remove any previous animation
           marquee.style.animation = 'none';
 
-          
           const speedPxPerSec = 150; // approx same speed as before, adjust if needed
           const duration = tickerWidth / speedPxPerSec; // seconds
 
@@ -409,10 +416,10 @@ body.dark-mode a {
 
     rangeButtons.forEach(button => {
       button.addEventListener('click', () => {
-        selectedRange = button.dataset.range;
-        setActiveRangeButton(selectedRange);
-        if (symbolInput.value.trim() !== '') {
-          fetchStockData(symbolInput.value.trim(), selectedRange);
+        currentRange = button.dataset.range;  // update global range
+        setActiveRangeButton(currentRange);
+        if (currentSymbol) {
+          fetchStockData(currentSymbol, currentRange);
         }
       });
     });
@@ -506,13 +513,22 @@ body.dark-mode a {
       }
     }
 
+    // When user submits form: update currentSymbol and fetch data
     form.addEventListener('submit', e => {
       e.preventDefault();
       const symbol = symbolInput.value.trim();
       if (symbol) {
-        fetchStockData(symbol, selectedRange);
+        currentSymbol = symbol.toUpperCase();
+        fetchStockData(currentSymbol, currentRange);
       }
     });
+
+    // Auto-refresh stock data every 5 seconds if symbol is selected
+    setInterval(() => {
+      if (currentSymbol) {
+        fetchStockData(currentSymbol, currentRange);
+      }
+    }, 5000);
 
     loadNews();
   </script>
