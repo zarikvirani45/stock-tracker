@@ -24,7 +24,7 @@ html, body {
       text-align: center;
     }
 
-    /* Smooth continuous marquee */
+    /* Updated marquee styles for continuous scrolling with spacer */
     .price-strip {
       width: 100%;
       overflow: hidden;
@@ -37,11 +37,12 @@ html, body {
       display: flex;
       white-space: nowrap;
       will-change: transform;
-      animation: marquee-scroll 15s linear infinite;
+      animation: marquee-scroll 20s linear infinite;
     }
 
     #price-marquee > .ticker-content {
       display: flex;
+      align-items: center;
     }
 
     .price-strip .ticker-item {
@@ -50,6 +51,12 @@ html, body {
       color: #ffffff;
       font-weight: bold;
       white-space: nowrap;
+    }
+
+    /* Spacer to add 4 ticker widths worth of space */
+    .ticker-spacer {
+      display: inline-block;
+      width: calc((2em + 6ch) * 4); /* Approx 4 ticker widths: margin + approx text width */
     }
 
     @keyframes marquee-scroll {
@@ -353,14 +360,21 @@ body.dark-mode a {
         const marquee = document.getElementById('price-marquee');
         if (!marquee) return;
 
-        const tickerHtml = data.map(item => `
+        // Create ticker items HTML
+        const tickerItemsHtml = data.map(item => `
           <span class="ticker-item">${item.symbol}: $${item.price.toFixed(2)}</span>
         `).join('');
 
+        // Add spacer elements (4 empty spaces after tickers)
+        const spacerHtml = `<span class="ticker-spacer"></span>`;
+
+        // Full content with spacer appended
+        const fullTickerHtml = tickerItemsHtml + spacerHtml;
+
         const tickerContents = marquee.querySelectorAll('.ticker-content');
         if (tickerContents.length > 1) {
-          tickerContents[0].innerHTML = tickerHtml;
-          tickerContents[1].innerHTML = tickerHtml;  // duplicate for smooth looping
+          tickerContents[0].innerHTML = fullTickerHtml;
+          tickerContents[1].innerHTML = fullTickerHtml;  // duplicate for smooth looping
         }
       } catch (err) {
         console.error('Error fetching ticker prices:', err);
