@@ -9,6 +9,8 @@ import yfinance as yf
 from datetime import datetime, timedelta
 import requests
 from urllib.parse import urlparse  # <-- Added for parsing MYSQL_URL
+import pytz
+from datetime import time
 
 app = Flask(__name__)
 CORS(app)
@@ -142,11 +144,33 @@ def stock_data():
             "max": None
         }
 
-        if range_code == "max":
-            hist = ticker.history(period="max")
+        # --- START of 1d weekend/early Monday fix ---
+        eastern = pytz.timezone('US/Eastern')
+        now_et = datetime.now(eastern)
+        weekday = now_et.weekday()  # Monday=0 ... Sunday=6
+        market_open_time = time(9, 30)
+
+        if range_code == "1d":
+            if weekday in [5, 6]:  # Saturday or Sunday
+                hist = ticker.history(period="5d")
+                hist = hist[hist.index.weekday == 4]  # Friday only
+                if hist.empty:
+                    return jsonify({"error": "No Friday data found in last 5 days."})
+            elif weekday == 0 and now_et.time() < market_open_time:  # Monday before 9:30am ET
+                hist = ticker.history(period="5d")
+                hist = hist[hist.index.weekday == 4]  # Friday only
+                if hist.empty:
+                    return jsonify({"error": "No Friday data found in last 5 days."})
+            else:
+                start_date = end_date - range_map["1d"]
+                hist = ticker.history(start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
         else:
-            start_date = end_date - range_map.get(range_code, timedelta(weeks=4))
-            hist = ticker.history(start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
+            if range_code == "max":
+                hist = ticker.history(period="max")
+            else:
+                start_date = end_date - range_map.get(range_code, timedelta(weeks=4))
+                hist = ticker.history(start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
+        # --- END of 1d weekend/early Monday fix ---
 
         hist = hist.dropna()
         if hist.empty:
