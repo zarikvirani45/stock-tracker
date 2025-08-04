@@ -7,9 +7,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import yfinance as yf
 from datetime import datetime, timedelta
-import os
 import requests
-import mysql.connector
 
 app = Flask(__name__)
 CORS(app)
@@ -22,7 +20,8 @@ db_config = {
     'host': os.environ.get("DB_HOST", "localhost"),
     'user': os.environ.get("DB_USER", "root"),
     'password': os.environ.get("DB_PASSWORD", ""),
-    'database': os.environ.get("DB_NAME", "stock_dashboard")
+    'database': os.environ.get("DB_NAME", "stock_dashboard"),
+    'port': int(os.environ.get("DB_PORT", 3306))
 }
 
 def get_db_connection():
