@@ -23,7 +23,28 @@ db_config = {
     'database': os.environ.get("DB_NAME", "stock_dashboard"),
     'port': int(os.environ.get("DB_PORT", 3306))
 }
-
+def log_user_action(action, symbol=None):
+    print(f"[Logging to DB] Action: {action}, Symbol: {symbol}")  # Debug output
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS user_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                action VARCHAR(255),
+                symbol VARCHAR(10),
+                timestamp DATETIME
+            )
+        """)
+        cursor.execute(
+            "INSERT INTO user_logs (action, symbol, timestamp) VALUES (%s, %s, %s)",
+            (action, symbol, datetime.now())
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"[DB Logging Error] {e}")
 def get_db_connection():
     return mysql.connector.connect(**db_config)
 
@@ -57,6 +78,8 @@ init_db()
 
 @app.route('/')
 def home():
+    # Log the visit
+    log_user_action("page load")
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -72,8 +95,8 @@ def home():
 def stock_data():
     data = request.get_json()
     symbol = data.get("symbol", "").upper()
+    log_user_action("search_stock", symbol)
     range_code = data.get("range", "1mo")
-
     try:
         # Log the search
         try:
