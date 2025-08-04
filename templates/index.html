@@ -24,22 +24,24 @@ html, body {
       text-align: center;
     }
 
+    /* Updated marquee styles for continuous scrolling */
     .price-strip {
       width: 100%;
       overflow: hidden;
-      white-space: nowrap;
       padding: 0.5em 1em;
       background: #004aad;
+      position: relative;
     }
 
     #price-marquee {
-      display: inline-block;
-      animation: marquee-left 25s linear infinite;
+      display: flex;
+      white-space: nowrap;
+      animation: marquee-left 20s linear infinite;
+      will-change: transform;
     }
 
-    @keyframes marquee-left {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
+    #price-marquee > .ticker-content {
+      display: flex;
     }
 
     .price-strip .ticker-item {
@@ -47,6 +49,15 @@ html, body {
       margin-right: 2em;
       color: #ffffff;
       font-weight: bold;
+    }
+
+    @keyframes marquee-left {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
     }
 
     main {
@@ -222,7 +233,10 @@ body.dark-mode a {
     </label>
   </div>
   <div class="price-strip">
-    <div id="price-marquee"></div>
+    <div id="price-marquee">
+      <div class="ticker-content"></div>
+      <div class="ticker-content"></div>
+    </div>
   </div>
   <main>
     <form id="stock-form">
@@ -320,6 +334,15 @@ body.dark-mode a {
         document.body.classList.toggle('dark-mode', darkToggle.checked);
         localStorage.setItem('darkMode', darkToggle.checked);
       });
+
+      // Move popular-stock-btn listeners inside DOMContentLoaded
+      document.querySelectorAll('.popular-stock-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const symbol = btn.getAttribute('data-symbol');
+          symbolInput.value = symbol;               // Update input box
+          fetchStockData(symbol, selectedRange);   // Fetch stock data & update chart
+        });
+      });
     });
 
     async function fetchTickerPrices() {
@@ -329,9 +352,12 @@ body.dark-mode a {
         const marquee = document.getElementById('price-marquee');
         if (!marquee) return;
 
-        marquee.innerHTML = data.map(item => `
+        const tickerHtml = data.map(item => `
           <span class="ticker-item">${item.symbol}: $${item.price.toFixed(2)}</span>
         `).join('');
+
+        const tickerContents = marquee.querySelectorAll('.ticker-content');
+        tickerContents.forEach(tc => { tc.innerHTML = tickerHtml; });
       } catch (err) {
         console.error('Error fetching ticker prices:', err);
       }
@@ -451,15 +477,6 @@ body.dark-mode a {
       if (symbol) {
         fetchStockData(symbol, selectedRange);
       }
-    });
-
-    // Popular Stocks button clicks
-    document.querySelectorAll('.popular-stock-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const symbol = btn.getAttribute('data-symbol');
-        symbolInput.value = symbol;               // Update input box
-        fetchStockData(symbol, selectedRange);   // Fetch stock data & update chart
-      });
     });
 
     loadNews();
