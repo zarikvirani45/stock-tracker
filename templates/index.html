@@ -148,32 +148,6 @@ html, body {
       height: auto !important;
     }
 
-    #news-section {
-      margin-top: 3em;
-      text-align: left;
-    }
-
-    #news-section h2 {
-      margin-bottom: 0.5em;
-      text-align: center;
-    }
-
-    .news-article {
-      margin-bottom: 1.2em;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 1em;
-    }
-
-    .news-article a {
-      color: #004aad;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
-    .news-source {
-      font-size: 0.85em;
-      color: #666;
-    }
     /* DARK MODE STYLES */
 body.dark-mode {
   background-color: #121212 !important;
@@ -207,10 +181,7 @@ body.dark-mode button.active {
 }
 
 body.dark-mode #stock-info p,
-body.dark-mode #stock-info h2,
-body.dark-mode #news-section,
-body.dark-mode .news-article,
-body.dark-mode .news-source {
+body.dark-mode #stock-info h2 {
   color: #ddd !important;
 }
 
@@ -319,17 +290,12 @@ body.dark-mode a {
     <div id="chart-container">
       <canvas id="stock-chart" width="800" height="400"></canvas>
     </div>
-    <section id="news-section">
-      <h2>Latest Finance News</h2>
-      <div id="news-list"></div>
-    </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const form = document.getElementById('stock-form');
     const symbolInput = document.getElementById('symbol-input');
     const stockInfoDiv = document.getElementById('stock-info');
-    const newsList = document.getElementById('news-list');
     const rangeButtons = document.querySelectorAll('.range-buttons button');
     let selectedRange = '1mo';
     let chart;
@@ -497,22 +463,6 @@ body.dark-mode a {
       }
     }
 
-    async function loadNews() {
-      try {
-        const response = await fetch('/news');
-        const articles = await response.json();
-        newsList.innerHTML = articles.map(a => `
-          <div class="news-article">
-            <a href="${a.url}" target="_blank" rel="noopener">${a.title}</a>
-            <div class="news-source">${a.source} | ${new Date(a.publishedAt).toLocaleString()}</div>
-            <p>${a.description || ''}</p>
-          </div>
-        `).join('');
-      } catch {
-        newsList.innerHTML = '<p>News unavailable</p>';
-      }
-    }
-
     // When user submits form: update currentSymbol and fetch data
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -522,10 +472,6 @@ body.dark-mode a {
         fetchStockData(currentSymbol, currentRange);
       }
     });
-
-    // Removed the auto-refresh interval to avoid chart reloading every 5 seconds
-
-    loadNews();
   </script>
 </body>
 </html>
