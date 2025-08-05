@@ -523,12 +523,7 @@ body.dark-mode a {
       }
     });
 
-    // Auto-refresh stock data every 5 seconds if symbol is selected
-    setInterval(() => {
-      if (currentSymbol) {
-        fetchStockData(currentSymbol, currentRange);
-      }
-    }, 5000);
+    // Removed the auto-refresh interval to avoid chart reloading every 5 seconds
 
     loadNews();
   </script>
