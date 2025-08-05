@@ -138,29 +138,26 @@ def stock_data():
             "max": None
         }
 
-        # --- START of 1d weekend/early Monday fix + intraday 1d live fix ---
         eastern = pytz.timezone('US/Eastern')
         now_et = datetime.now(eastern)
-        weekday = now_et.weekday()  # Monday=0 ... Sunday=6
+        weekday = now_et.weekday()
         market_open_time = time(9, 30)
         market_close_time = time(16, 0)
 
         if range_code == "1d":
-            if weekday in [5, 6]:  # Saturday or Sunday
+            if weekday in [5, 6]:
                 hist = ticker.history(period="5d")
-                hist = hist[hist.index.weekday == 4]  # Friday only
+                hist = hist[hist.index.weekday == 4]
                 if hist.empty:
                     return jsonify({"error": "No Friday data found in last 5 days."})
-            elif weekday == 0 and now_et.time() < market_open_time:  # Monday before 9:30am ET
+            elif weekday == 0 and now_et.time() < market_open_time:
                 hist = ticker.history(period="5d")
-                hist = hist[hist.index.weekday == 4]  # Friday only
+                hist = hist[hist.index.weekday == 4]
                 if hist.empty:
                     return jsonify({"error": "No Friday data found in last 5 days."})
             elif weekday == 0 and market_open_time <= now_et.time() <= market_close_time:
-                # Monday during market hours, fetch intraday 1d live data (5 min interval)
                 hist = ticker.history(period="1d", interval="5m")
                 if hist.empty:
-                    # fallback to last Friday's data if intraday empty
                     hist = ticker.history(period="5d")
                     hist = hist[hist.index.weekday == 4]
                     if hist.empty:
@@ -174,7 +171,6 @@ def stock_data():
             else:
                 start_date = end_date - range_map.get(range_code, timedelta(weeks=4))
                 hist = ticker.history(start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
-        # --- END of 1d weekend/early Monday fix + intraday 1d live fix ---
 
         hist = hist.dropna()
         if hist.empty:
