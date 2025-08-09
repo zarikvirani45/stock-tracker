@@ -145,38 +145,15 @@ def stock_data():
         market_close_time = time(16, 0)
 
         if range_code == "1d":
-            # Weekend - get last Friday daily data
-            if weekday in [5, 6]:
+            print("selected 1d")
+            # get intraday data first
+            hist = ticker.history(period="1d", interval="5m")
+            
+            # if no intraday data, fallback to recent daily data
+            if hist.empty:
                 hist = ticker.history(period="5d", interval="1d")
-                hist = hist[hist.index.weekday == 4]
-                if hist.empty:
-                    return jsonify({"error": "No Friday data found in last 5 days."})
-
-            # Monday before market open - get last Friday daily data
-            elif weekday == 0 and now_et.time() < market_open_time:
-                hist = ticker.history(period="5d", interval="1d")
-                hist = hist[hist.index.weekday == 4]
-                if hist.empty:
-                    return jsonify({"error": "No Friday data found in last 5 days."})
-
-            # Monday during market hours - get intraday 5m data
-            elif weekday == 0 and market_open_time <= now_et.time() <= market_close_time:
-                hist = ticker.history(period="1d", interval="5m")
-                if hist.empty:
-                    hist = ticker.history(period="5d", interval="1d")
-                    hist = hist[hist.index.weekday == 4]
-                    if hist.empty:
-                        return jsonify({"error": "No Friday data found in last 5 days."})
-
-            # Monday after market close - get daily data for Monday
-            elif weekday == 0 and now_et.time() > market_close_time:
-                hist = ticker.history(period="1d", interval="1d")
-
-            # Other weekdays - get intraday 5m data during market hours, else daily data
-            else:
-                hist = ticker.history(period="1d", interval="5m")
-                if hist.empty:
-                    hist = ticker.history(period="1d", interval="1d")
+                if not hist.empty:
+                    hist = hist.tail(1)  # get most recent day
 
         else:
             if range_code == "max":
@@ -189,7 +166,10 @@ def stock_data():
         if hist.empty:
             return jsonify({"error": "No historical data found for this range."})
 
-        dates = hist.index.strftime('%Y-%m-%d').tolist()
+        if range_code == "1d" and len(hist) > 20: 
+            dates = hist.index.strftime('%H:%M').tolist()
+        else:
+            dates = hist.index.strftime('%Y-%m-%d').tolist()
         prices = hist['Close'].round(2).tolist()
 
         start_price = hist['Close'].iloc[0]
@@ -210,6 +190,9 @@ def stock_data():
             "absolute_change": absolute_change,
             "percent_change": percent_change
         }
+
+        print('stock summary: ')
+        print(stock_summary)
 
         return jsonify(stock_summary)
 
