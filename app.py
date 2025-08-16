@@ -19,11 +19,11 @@ mysql_url = os.environ.get("MYSQL_URL")
 parsed_url = urlparse(mysql_url) if mysql_url else None
 
 db_config = {
-    'host': parsed_url.hostname if parsed_url else os.environ.get("MYSQLHOST"),
-    'user': parsed_url.username if parsed_url else os.environ.get("MYSQLUSER"),
-    'password': parsed_url.password if parsed_url else os.environ.get("MYSQLPASSWORD"),
-    'database': parsed_url.path.lstrip('/') if parsed_url else os.environ.get("MYSQLDATABASE"),
-    'port': parsed_url.port if parsed_url else int(os.environ.get("MYSQLPORT", 3306))
+    'host': parsed_url.hostname if parsed_url else os.environ.get("mysqlhost"),
+    'user': parsed_url.username if parsed_url else os.environ.get("mysqluser"),
+    'password': parsed_url.password if parsed_url else os.environ.get("mysqlpassword"),
+    'database': parsed_url.path.lstrip('/') if parsed_url else os.environ.get("mysqldatabase"),
+    'port': parsed_url.port if parsed_url else int(os.environ.get("mysqlport", 3306))
 }
 print(db_config)
 
