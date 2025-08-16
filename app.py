@@ -18,8 +18,10 @@ NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "your_newsapi_key_here")
 # mysql_url = os.environ.get("MYSQL_URL")
 # parsed_url = urlparse(mysql_url) if mysql_url else None
 # Grab the DATABASE_URL from Railway
-db_url = os.environ.get("DATABASE_URL")
+db_url = os.environ.get("DATABASE_URL") or os.environ.get("MYSQL_URL")
+print("[RAW DATABASE_URL]", repr(db_url))  # <-- Add this line here
 parsed_url = urlparse(db_url)
+
 
 db_config = {
     'host': parsed_url.hostname,
@@ -28,7 +30,9 @@ db_config = {
     'database': parsed_url.path[1:],
     'port': parsed_url.port
 }
-print(db_config)
+masked_config = db_config.copy()
+masked_config['password'] = '***'
+print("[DB CONFIG]", masked_config)
 
 def log_user_action(action, symbol=None):
     print(f"[Logging to DB] Action: {action}, Symbol: {symbol}")  
