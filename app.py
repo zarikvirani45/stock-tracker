@@ -25,7 +25,7 @@ db_config = {
     'database': parsed_url.path.lstrip('/') if parsed_url else os.environ.get("MYSQLDATABASE"),
     'port': parsed_url.port if parsed_url else int(os.environ.get("MYSQLPORT", 3306))
 }
-# -------------------------------------------------------------
+print(db_config)
 
 def log_user_action(action, symbol=None):
     print(f"[Logging to DB] Action: {action}, Symbol: {symbol}")  
@@ -146,7 +146,7 @@ def stock_data():
 
         if range_code == "1d":
             print("selected 1d")
-            # get intraday data first
+            
             hist = ticker.history(period="1d", interval="5m")
             
             # if no intraday data, fallback to recent daily data
