@@ -17,16 +17,16 @@ NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "your_newsapi_key_here")
 
 # mysql_url = os.environ.get("MYSQL_URL")
 # parsed_url = urlparse(mysql_url) if mysql_url else None
-parsed_url = urlparse(os.getenv("DATABASE_URL"))
-
+# Grab the DATABASE_URL from Railway
+db_url = os.environ.get("DATABASE_URL")
+parsed_url = urlparse(db_url)
 
 db_config = {
-    'host': parsed_url.hostname if parsed_url else os.environ.get("MYSQLHOST"),
-    'user': parsed_url.username if parsed_url else os.environ.get("MYSQLUSER"),
-    'password': parsed_url.password if parsed_url else os.environ.get("MYSQLPASSWORD"),
-    # parsed_url.path gives something like "/railway", so we strip the leading slash
-    'database': parsed_url.path[1:] if parsed_url else os.environ.get("MYSQLDATABASE"),
-    'port': parsed_url.port if parsed_url else int(os.environ.get("MYSQLPORT", 3306))
+    'host': parsed_url.hostname,
+    'user': parsed_url.username,
+    'password': parsed_url.password,
+    'database': parsed_url.path[1:],
+    'port': parsed_url.port
 }
 print(db_config)
 
