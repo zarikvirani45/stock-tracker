@@ -24,7 +24,8 @@ db_config = {
     'host': parsed_url.hostname if parsed_url else os.environ.get("MYSQLHOST"),
     'user': parsed_url.username if parsed_url else os.environ.get("MYSQLUSER"),
     'password': parsed_url.password if parsed_url else os.environ.get("MYSQLPASSWORD"),
-    'database': parsed_url.path.lstrip('/') if parsed_url else os.environ.get("MYSQLDATABASE"),
+    # parsed_url.path gives something like "/railway", so we strip the leading slash
+    'database': parsed_url.path[1:] if parsed_url else os.environ.get("MYSQLDATABASE"),
     'port': parsed_url.port if parsed_url else int(os.environ.get("MYSQLPORT", 3306))
 }
 print(db_config)
