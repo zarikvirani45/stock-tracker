@@ -1,4 +1,4 @@
-A fast, minimal stock dashboard that fetches **live prices and historical data** (1D–5Y+) from Yahoo Finance, renders interactive charts with **Chart.js**, and logs market snapshots to **MySQL/DuckDB** for analysis. Built for clarity and reproducibility—ideal for coursework and portfolio demos.
+A fast, minimal stock dashboard that fetches **live prices and historical data** (1D–5Y+) from Yahoo Finance, renders interactive charts with **Chart.js**, and logs market snapshots to **MySQL/DuckDB** for analysis. Built for clarity and reproducibility
 
 ---
 
